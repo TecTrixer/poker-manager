@@ -1,20 +1,10 @@
 use actix_files::Files;
 use actix_web::{web, App, HttpServer};
-use tokio::sync::RwLock;
 use tera::Tera;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-mod controller;
-mod db;
-mod models;
-mod views;
-
-pub struct AppState {
-    pub db: sqlx::SqlitePool,
-    pub tera: Tera,
-    pub sse_senders: RwLock<Vec<tokio::sync::mpsc::Sender<actix_web_lab::sse::Event>>>,
-}
+use poker_manager::{controller, db, AppState};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -37,10 +27,9 @@ async fn main() -> std::io::Result<()> {
     let state_data = web::Data::new(AppState {
         db,
         tera,
-        sse_senders: RwLock::new(Vec::new()),
+        sse_senders: tokio::sync::RwLock::new(Vec::new()),
     });
 
-    // Give the broadcast loop a clone of the Arc inside web::Data
     let state_for_loop = state_data.clone();
     tokio::spawn(async move {
         controller::sse::broadcast_loop(state_for_loop).await;

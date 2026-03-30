@@ -1,0 +1,15 @@
+{% for level in levels %}
+<div class="level-row">
+  <select name="levels[{{ level.index }}][is_break]">
+    <option value="false"{% if not level.is_break %} selected{% endif %}>Play</option>
+    <option value="true"{% if level.is_break %} selected{% endif %}>Break</option>
+  </select>
+  <input type="number" name="levels[{{ level.index }}][small]"
+         placeholder="Small blind" min="0" value="{{ level.small }}">
+  <input type="number" name="levels[{{ level.index }}][big]"
+         placeholder="Big blind" min="0" value="{{ level.big }}">
+  <input type="number" name="levels[{{ level.index }}][duration]"
+         placeholder="Minutes" min="1" value="{{ level.duration }}">
+</div>
+{% endfor %}
+<input id="level_count" name="index" value="{{ level_count }}" hx-swap-oob="true">

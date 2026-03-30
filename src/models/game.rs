@@ -48,17 +48,6 @@ impl Game {
         (level.duration_secs - self.seconds_elapsed()).max(0)
     }
 
-    pub fn is_running(&self) -> bool {
-        self.status == "running"
-    }
-
-    pub fn is_paused(&self) -> bool {
-        self.status == "paused"
-    }
-
-    pub fn is_active(&self) -> bool {
-        self.is_running() || self.is_paused()
-    }
 }
 
 pub async fn get_active_game(pool: &SqlitePool) -> sqlx::Result<Option<Game>> {

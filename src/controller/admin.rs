@@ -8,7 +8,7 @@ use crate::{
         get_chip_types, insert_blind_level, insert_chip_type, pause_game, reset_game, resume_game,
         set_level, start_game,
     },
-    views::{build_timer_view, format_time, level_label, LevelAdminView},
+    views::{format_time, level_label, LevelAdminView},
     AppState,
 };
 
@@ -78,7 +78,8 @@ pub async fn setup_post(
     state: web::Data<AppState>,
     body: web::Bytes,
 ) -> HttpResponse {
-    let form: SetupForm = match serde_qs::from_bytes(&body) {
+    let qs_config = serde_qs::Config::new(5, false);
+    let form: SetupForm = match qs_config.deserialize_bytes(&body) {
         Ok(f) => f,
         Err(e) => {
             tracing::error!("Form parse error: {e}");
@@ -269,6 +270,51 @@ pub async fn game_reset(state: web::Data<AppState>) -> HttpResponse {
         let _ = reset_game(&state.db, game.id).await;
     }
     redirect("/admin/game")
+}
+
+// ── Suggest schedule ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+pub struct SuggestScheduleForm {
+    pub num_players: i64,
+    pub total_duration_mins: i64,
+    pub level_duration_mins: i64,
+    pub chips: Vec<ChipFormEntry>,
+}
+
+#[post("/admin/suggest-schedule")]
+pub async fn suggest_schedule_handler(
+    state: web::Data<AppState>,
+    body: web::Bytes,
+) -> HttpResponse {
+    let qs_config = serde_qs::Config::new(5, false);
+    let form: SuggestScheduleForm = match qs_config.deserialize_bytes(&body) {
+        Ok(f) => f,
+        Err(e) => {
+            tracing::error!("suggest-schedule parse error: {e}");
+            return HttpResponse::BadRequest().body("Invalid form data");
+        }
+    };
+    let chip_inputs: Vec<crate::schedule::ChipInput> = form
+        .chips
+        .iter()
+        .map(|c| crate::schedule::ChipInput {
+            value: c.value,
+            total: c.total,
+        })
+        .collect();
+    let input = crate::schedule::ScheduleInput {
+        chips: chip_inputs,
+        num_players: form.num_players,
+        total_duration_mins: form.total_duration_mins,
+        level_duration_mins: form.level_duration_mins,
+    };
+    let levels = crate::schedule::suggest_schedule(&input);
+    let level_count = levels.len();
+    let mut ctx = Context::new();
+    ctx.insert("levels", &levels);
+    ctx.insert("level_count", &level_count);
+    render(&state, "components/suggested_levels.html", &ctx)
 }
 
 // ── HTMX components ───────────────────────────────────────────────────────────

@@ -23,36 +23,10 @@ pub struct LevelView {
 }
 
 #[derive(Serialize)]
-pub struct PlayerIndexView {
-    pub timer: TimerView,
-    pub chips: Vec<ChipView>,
-}
-
-#[derive(Serialize)]
 pub struct ChipView {
     pub color: String,
     pub value: i64,
     pub chips_per_player: i64,
-}
-
-#[derive(Serialize)]
-pub struct AdminGameView {
-    pub game: GameView,
-    pub levels: Vec<LevelAdminView>,
-    pub chips: Vec<ChipType>,
-    pub current_level_info: Option<LevelView>,
-    pub next_level_info: Option<LevelView>,
-    pub seconds_remaining: i64,
-    pub time_display: String,
-}
-
-#[derive(Serialize)]
-pub struct GameView {
-    pub id: i64,
-    pub status: String,
-    pub num_tables: i64,
-    pub num_players: i64,
-    pub current_level: i64,
 }
 
 #[derive(Serialize)]
@@ -123,13 +97,6 @@ pub fn build_timer_view(
 }
 
 pub fn build_chip_distribution(chips: &[ChipType], num_players: i64) -> Vec<ChipView> {
-    let total_value: i64 = chips.iter().map(|c| c.value * c.total_count).sum();
-    let value_per_player = if num_players > 0 {
-        total_value / num_players
-    } else {
-        0
-    };
-
     chips
         .iter()
         .map(|c| {

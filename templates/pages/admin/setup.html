@@ -34,6 +34,23 @@
     </fieldset>
 
     <fieldset>
+      <legend>Schedule estimation</legend>
+      <label>Total game duration (minutes)
+        <input type="number" name="total_duration_mins" value="120" min="1">
+      </label>
+      <label>Level duration (minutes)
+        <input type="number" name="level_duration_mins" value="20" min="1">
+      </label>
+      <button type="button"
+              hx-post="/admin/suggest-schedule"
+              hx-include="closest form"
+              hx-target="#blind-levels"
+              hx-swap="innerHTML">
+        Suggest schedule
+      </button>
+    </fieldset>
+
+    <fieldset>
       <legend>Blind schedule</legend>
       <div class="row-header level-row-header">
         <span>Type</span><span>Small</span><span>Big</span><span>Minutes</span>
