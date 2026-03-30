@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup — Poker Manager</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+<main>
+  <h1>Game Setup</h1>
+  <form method="POST" action="/admin/setup">
+
+    <fieldset>
+      <legend>Game</legend>
+      <label>Tables <input type="number" name="num_tables" value="{% if game %}{{ game.num_tables }}{% else %}1{% endif %}" min="1" required></label>
+      <label>Players <input type="number" name="num_players" value="{% if game %}{{ game.num_players }}{% else %}8{% endif %}" min="1" required></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Chips</legend>
+      <div class="row-header">
+        <span>Color</span><span>Value</span><span>Total count</span>
+      </div>
+      {% for i in range(end=6) %}
+      {% set index = i %}
+      <div class="chip-row">
+        <input type="text" name="chips[{{ index }}][color]" placeholder="e.g. White">
+        <input type="number" name="chips[{{ index }}][value]" placeholder="Value" min="0" value="0">
+        <input type="number" name="chips[{{ index }}][total]" placeholder="Total" min="0" value="0">
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Blind schedule</legend>
+      <div class="row-header level-row-header">
+        <span>Type</span><span>Small</span><span>Big</span><span>Minutes</span>
+      </div>
+      <div id="blind-levels">
+        {% for i in range(end=num_rows) %}
+        {% set index = i %}
+        {% include "components/blind_row.html" %}
+        {% endfor %}
+      </div>
+      <input type="hidden" id="level_count" name="index" value="{{ num_rows }}">
+      <button type="button"
+              hx-get="/admin/components/blind-row"
+              hx-include="#level_count"
+              hx-target="#blind-levels"
+              hx-swap="beforeend">
+        + Add level
+      </button>
+    </fieldset>
+
+    <button type="submit">Save &amp; continue</button>
+  </form>
+</main>
+</body>
+</html>

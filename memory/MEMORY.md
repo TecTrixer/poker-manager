@@ -1,0 +1,1 @@
+- [Poker Manager Project State](project_state.md) — Implementation status, architecture decisions, routes, timer logic

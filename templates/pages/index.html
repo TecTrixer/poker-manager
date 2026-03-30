@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Poker Timer{% endblock title %}
+
+{% block content %}
+<div hx-ext="sse" sse-connect="/sse/timer">
+  <div id="timer-display" sse-swap="timer">
+    {% include "components/timer.html" %}
+  </div>
+</div>
+
+{% if has_game and chips %}
+<section class="chip-section">
+  <h2>Starting chips per player</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Color</th>
+        <th>Value</th>
+        <th>Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for chip in chips %}
+      <tr>
+        <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
+        <td>{{ chip.value }}</td>
+        <td>{{ chip.chips_per_player }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock content %}

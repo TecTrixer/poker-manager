@@ -1,0 +1,278 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --border: #333;
+  --text: #e8e8e8;
+  --text-muted: #888;
+  --accent: #4a9eff;
+  --danger: #e05252;
+  --paused: #f0a030;
+  --break: #6ab04c;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+header nav {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+header nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+header nav a:hover { color: var(--text); }
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
+
+/* ── Timer ──────────────────────────────────────────────────────────────── */
+
+.timer-block {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.blinds-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.blind-value {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.separator {
+  font-size: 2.5rem;
+  color: var(--text-muted);
+}
+
+.blinds-current {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.timer-countdown {
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+  text-align: center;
+}
+
+.timer-countdown.paused { color: var(--paused); }
+
+.break-label {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--break);
+}
+
+.status-label { color: var(--text-muted); }
+
+.level-indicator {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  width: 100%;
+  text-align: center;
+}
+
+.blinds-next {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.next-label { margin-right: 0.25rem; }
+.next-duration { margin-left: 0.25rem; }
+
+/* ── Chips ──────────────────────────────────────────────────────────────── */
+
+.chip-section { margin-top: 2rem; }
+
+.chip-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+  background: #888;
+}
+
+.chip-white { background: #f0f0f0; border: 1px solid #999; }
+.chip-red { background: #c0392b; }
+.chip-blue { background: #2980b9; }
+.chip-green { background: #27ae60; }
+.chip-black { background: #222; border: 1px solid #666; }
+.chip-yellow { background: #f1c40f; }
+.chip-orange { background: #e67e22; }
+.chip-purple { background: #8e44ad; }
+.chip-pink { background: #e91e63; }
+.chip-grey, .chip-gray { background: #7f8c8d; }
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 0.5rem;
+}
+
+td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+tr.current-level td { color: var(--accent); font-weight: 600; }
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.row-header {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.level-row-header {
+  grid-template-columns: 5rem 1fr 1fr 5rem;
+}
+
+.chip-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.level-row {
+  display: grid;
+  grid-template-columns: 5rem 1fr 1fr 5rem;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+button, .btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 1.1rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+button:hover { border-color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-danger:hover { background: var(--danger); color: #fff; }
+
+/* ── Game controls ──────────────────────────────────────────────────────── */
+
+.game-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.game-controls form { display: inline; }
+
+.game-controls a {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.game-status { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+
+.timer-admin {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}

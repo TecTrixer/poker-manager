@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS games (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    num_tables INTEGER NOT NULL DEFAULT 1,
+    num_players INTEGER NOT NULL DEFAULT 8,
+    current_level INTEGER NOT NULL DEFAULT 0,
+    level_started_at INTEGER,
+    paused_at INTEGER,
+    paused_duration_secs INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS blind_levels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    level_num INTEGER NOT NULL,
+    small_blind INTEGER NOT NULL DEFAULT 0,
+    big_blind INTEGER NOT NULL DEFAULT 0,
+    duration_secs INTEGER NOT NULL,
+    is_break INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS chip_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    color TEXT NOT NULL,
+    value INTEGER NOT NULL,
+    total_count INTEGER NOT NULL
+);

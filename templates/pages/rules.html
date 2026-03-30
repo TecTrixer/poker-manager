@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Rules{% endblock title %}
+
+{% block content %}
+<h1>Rules</h1>
+
+<section>
+  <h2>Hand rankings (best to worst)</h2>
+  <ol>
+    <li><strong>Royal Flush</strong> — A K Q J 10 of the same suit</li>
+    <li><strong>Straight Flush</strong> — Five consecutive cards of the same suit</li>
+    <li><strong>Four of a Kind</strong> — Four cards of the same rank</li>
+    <li><strong>Full House</strong> — Three of a kind + a pair</li>
+    <li><strong>Flush</strong> — Five cards of the same suit</li>
+    <li><strong>Straight</strong> — Five consecutive cards</li>
+    <li><strong>Three of a Kind</strong> — Three cards of the same rank</li>
+    <li><strong>Two Pair</strong> — Two different pairs</li>
+    <li><strong>One Pair</strong> — Two cards of the same rank</li>
+    <li><strong>High Card</strong> — Highest card in hand</li>
+  </ol>
+</section>
+
+{% if has_game and chips %}
+<section>
+  <h2>Chip values</h2>
+  <table>
+    <thead>
+      <tr><th>Color</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      {% for chip in chips %}
+      <tr>
+        <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
+        <td>{{ chip.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section>
+  <h2>Order of play</h2>
+  <ol>
+    <li>Dealer posts nothing. Cards are dealt starting left of the dealer.</li>
+    <li>Small blind posts the small blind (player left of dealer).</li>
+    <li>Big blind posts the big blind (player left of small blind).</li>
+    <li>Pre-flop betting starts with the player left of big blind (under the gun), going clockwise.</li>
+    <li>Post-flop betting starts with the small blind (or next active player left of dealer).</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Betting rules</h2>
+  <ul>
+    <li>Minimum raise: at least the size of the previous raise in that round.</li>
+    <li>All-in: a player may go all-in for less than the minimum raise; others may re-raise.</li>
+    <li>Check is only allowed when no bet has been made in the current round.</li>
+  </ul>
+</section>
+{% endblock content %}

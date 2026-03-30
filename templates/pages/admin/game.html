@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Control — Poker Manager</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+  <script src="/static/sse.js"></script>
+</head>
+<body>
+<main>
+  <h1>Game Control</h1>
+
+  <section class="game-status">
+    <p>Status: <strong>{{ status }}</strong> &nbsp;|&nbsp; Tables: {{ num_tables }} &nbsp;|&nbsp; Players: {{ num_players }}</p>
+  </section>
+
+  <section class="timer-admin" hx-ext="sse" sse-connect="/sse/timer">
+    <div id="timer-display" sse-swap="timer">
+      {% if current_level_info %}
+        <div class="blinds-current">
+          {% if current_level_info.is_break %}
+            <span class="break-label">BREAK</span>
+          {% else %}
+            <span class="blind-value">{{ current_level_info.small_blind }}</span>
+            <span class="separator">/</span>
+            <span class="blind-value">{{ current_level_info.big_blind }}</span>
+          {% endif %}
+          <div class="timer-countdown{% if status == "paused" %} paused{% endif %}">
+            {{ time_display }}
+          </div>
+        </div>
+        {% if next_level_info %}
+        <div class="blinds-next">
+          Next: {% if next_level_info.is_break %}BREAK{% else %}{{ next_level_info.small_blind }} / {{ next_level_info.big_blind }}{% endif %}
+        </div>
+        {% endif %}
+      {% else %}
+        <span class="status-label">Game not started</span>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="game-controls">
+    {% if status == "pending" %}
+      <form method="POST" action="/admin/game/start">
+        <button type="submit" class="btn-primary">Start game</button>
+      </form>
+    {% elif status == "running" %}
+      <form method="POST" action="/admin/game/pause">
+        <button type="submit">Pause</button>
+      </form>
+    {% elif status == "paused" %}
+      <form method="POST" action="/admin/game/resume">
+        <button type="submit" class="btn-primary">Resume</button>
+      </form>
+    {% endif %}
+
+    {% if status != "pending" %}
+    <form method="POST" action="/admin/game/prev" style="display:inline">
+      <button type="submit">&#8592; Prev level</button>
+    </form>
+    <form method="POST" action="/admin/game/next" style="display:inline">
+      <button type="submit">Next level &#8594;</button>
+    </form>
+    {% endif %}
+
+    <form method="POST" action="/admin/game/reset"
+          onsubmit="return confirm('Reset game to start?')">
+      <button type="submit" class="btn-danger">Reset</button>
+    </form>
+
+    <a href="/admin">Reconfigure setup</a>
+  </section>
+
+  <section class="schedule">
+    <h2>Schedule</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Type</th><th>Blinds</th><th>Duration</th></tr>
+      </thead>
+      <tbody>
+        {% for level in levels %}
+        <tr{% if level.is_current %} class="current-level"{% endif %}>
+          <td>{{ loop.index }}</td>
+          <td>{% if level.is_break %}Break{% else %}Play{% endif %}</td>
+          <td>{{ level.label }}</td>
+          <td>{{ level.duration_mins }}min</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if chips %}
+  <section>
+    <h2>Chips</h2>
+    <table>
+      <thead><tr><th>Color</th><th>Value</th><th>Total</th></tr></thead>
+      <tbody>
+        {% for chip in chips %}
+        <tr>
+          <td>{{ chip.color }}</td>
+          <td>{{ chip.value }}</td>
+          <td>{{ chip.total_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+</main>
+</body>
+</html>

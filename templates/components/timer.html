@@ -1,0 +1,42 @@
+{% if has_game %}
+  {% set s = timer.status %}
+  <section class="timer-block{% if s == "paused" %} paused{% endif %}">
+    <div class="blinds-current">
+      {% if s == "pending" %}
+        <span class="status-label">Waiting to start</span>
+      {% elif s == "ended" %}
+        <span class="status-label">Game over</span>
+      {% elif timer.current_level %}
+        {% if timer.current_level.is_break %}
+          <span class="break-label">BREAK</span>
+        {% else %}
+          <span class="blind-value">{{ timer.current_level.small_blind }}</span>
+          <span class="separator">/</span>
+          <span class="blind-value">{{ timer.current_level.big_blind }}</span>
+        {% endif %}
+        <div class="timer-countdown{% if s == "paused" %} paused{% endif %}">
+          {{ timer.time_display }}
+        </div>
+        <div class="level-indicator">Level {{ timer.level_num }} of {{ timer.total_levels }}</div>
+      {% else %}
+        <span class="status-label">No levels configured</span>
+      {% endif %}
+    </div>
+
+    {% if timer.next_level %}
+    <div class="blinds-next">
+      <span class="next-label">Next:</span>
+      {% if timer.next_level.is_break %}
+        <span>BREAK</span>
+      {% else %}
+        <span>{{ timer.next_level.small_blind }} / {{ timer.next_level.big_blind }}</span>
+      {% endif %}
+      <span class="next-duration">({{ timer.next_level.duration_mins }}min)</span>
+    </div>
+    {% endif %}
+  </section>
+{% else %}
+  <section class="timer-block">
+    <span class="status-label">No active game</span>
+  </section>
+{% endif %}
