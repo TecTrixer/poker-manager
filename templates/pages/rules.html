@@ -7,17 +7,137 @@
 
 <section>
   <h2>Hand rankings (best to worst)</h2>
-  <ol>
-    <li><strong>Royal Flush</strong> — A K Q J 10 of the same suit</li>
-    <li><strong>Straight Flush</strong> — Five consecutive cards of the same suit</li>
-    <li><strong>Four of a Kind</strong> — Four cards of the same rank</li>
-    <li><strong>Full House</strong> — Three of a kind + a pair</li>
-    <li><strong>Flush</strong> — Five cards of the same suit</li>
-    <li><strong>Straight</strong> — Five consecutive cards</li>
-    <li><strong>Three of a Kind</strong> — Three cards of the same rank</li>
-    <li><strong>Two Pair</strong> — Two different pairs</li>
-    <li><strong>One Pair</strong> — Two cards of the same rank</li>
-    <li><strong>High Card</strong> — Highest card in hand</li>
+  <ol class="hand-rankings">
+    <li>
+      <div class="hand-info">
+        <strong>Royal Flush</strong>
+        <span class="hand-desc">A K Q J 10 of the same suit</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-hearts">A<sub>♥</sub></span>
+        <span class="card suit-hearts">K<sub>♥</sub></span>
+        <span class="card suit-hearts">Q<sub>♥</sub></span>
+        <span class="card suit-hearts">J<sub>♥</sub></span>
+        <span class="card suit-hearts">10<sub>♥</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Straight Flush</strong>
+        <span class="hand-desc">Five consecutive cards of the same suit</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">9<sub>♠</sub></span>
+        <span class="card suit-spades">8<sub>♠</sub></span>
+        <span class="card suit-spades">7<sub>♠</sub></span>
+        <span class="card suit-spades">6<sub>♠</sub></span>
+        <span class="card suit-spades">5<sub>♠</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Four of a Kind</strong>
+        <span class="hand-desc">Four cards of the same rank</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">K<sub>♠</sub></span>
+        <span class="card suit-hearts">K<sub>♥</sub></span>
+        <span class="card suit-diamonds">K<sub>♦</sub></span>
+        <span class="card suit-clubs">K<sub>♣</sub></span>
+        <span class="card suit-spades">7<sub>♠</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Full House</strong>
+        <span class="hand-desc">Three of a kind + a pair</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">Q<sub>♠</sub></span>
+        <span class="card suit-hearts">Q<sub>♥</sub></span>
+        <span class="card suit-clubs">Q<sub>♣</sub></span>
+        <span class="card suit-diamonds">J<sub>♦</sub></span>
+        <span class="card suit-hearts">J<sub>♥</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Flush</strong>
+        <span class="hand-desc">Five cards of the same suit</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-diamonds">A<sub>♦</sub></span>
+        <span class="card suit-diamonds">J<sub>♦</sub></span>
+        <span class="card suit-diamonds">8<sub>♦</sub></span>
+        <span class="card suit-diamonds">5<sub>♦</sub></span>
+        <span class="card suit-diamonds">2<sub>♦</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Straight</strong>
+        <span class="hand-desc">Five consecutive cards</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-hearts">10<sub>♥</sub></span>
+        <span class="card suit-spades">9<sub>♠</sub></span>
+        <span class="card suit-diamonds">8<sub>♦</sub></span>
+        <span class="card suit-clubs">7<sub>♣</sub></span>
+        <span class="card suit-hearts">6<sub>♥</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Three of a Kind</strong>
+        <span class="hand-desc">Three cards of the same rank</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">8<sub>♠</sub></span>
+        <span class="card suit-hearts">8<sub>♥</sub></span>
+        <span class="card suit-clubs">8<sub>♣</sub></span>
+        <span class="card suit-diamonds">K<sub>♦</sub></span>
+        <span class="card suit-spades">3<sub>♠</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>Two Pair</strong>
+        <span class="hand-desc">Two different pairs</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">A<sub>♠</sub></span>
+        <span class="card suit-hearts">A<sub>♥</sub></span>
+        <span class="card suit-clubs">7<sub>♣</sub></span>
+        <span class="card suit-diamonds">7<sub>♦</sub></span>
+        <span class="card suit-spades">2<sub>♠</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>One Pair</strong>
+        <span class="hand-desc">Two cards of the same rank</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-hearts">J<sub>♥</sub></span>
+        <span class="card suit-spades">J<sub>♠</sub></span>
+        <span class="card suit-clubs">9<sub>♣</sub></span>
+        <span class="card suit-diamonds">5<sub>♦</sub></span>
+        <span class="card suit-spades">2<sub>♠</sub></span>
+      </div>
+    </li>
+    <li>
+      <div class="hand-info">
+        <strong>High Card</strong>
+        <span class="hand-desc">Highest card in hand</span>
+      </div>
+      <div class="hand-cards">
+        <span class="card suit-spades">A<sub>♠</sub></span>
+        <span class="card suit-hearts">J<sub>♥</sub></span>
+        <span class="card suit-clubs">9<sub>♣</sub></span>
+        <span class="card suit-diamonds">6<sub>♦</sub></span>
+        <span class="card suit-hearts">2<sub>♥</sub></span>
+      </div>
+    </li>
   </ol>
 </section>
 
@@ -41,8 +161,54 @@
 {% endif %}
 
 <section>
+  <h2>Table positions</h2>
+  <div class="table-diagram">
+    <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Poker table seating diagram">
+      <!-- Table felt -->
+      <ellipse cx="160" cy="100" rx="140" ry="80" fill="#2e7d45" stroke="#1a5230" stroke-width="6"/>
+      <!-- Center label -->
+      <text x="160" y="106" text-anchor="middle" font-size="13" fill="#a8d8a8" font-family="system-ui">♠ ♥ ♦ ♣</text>
+
+      <!-- Dealer (bottom right) -->
+      <circle cx="240" cy="160" r="18" fill="#f5c542" stroke="#c49a00" stroke-width="2"/>
+      <text x="240" y="157" text-anchor="middle" font-size="9" fill="#333" font-family="system-ui" font-weight="bold">DEALER</text>
+      <text x="240" y="168" text-anchor="middle" font-size="7" fill="#555" font-family="system-ui">(D)</text>
+
+      <!-- Small blind (bottom left) -->
+      <circle cx="100" cy="175" r="18" fill="#5aabff" stroke="#1a6fc4" stroke-width="2"/>
+      <text x="100" y="172" text-anchor="middle" font-size="8" fill="#fff" font-family="system-ui" font-weight="bold">SMALL</text>
+      <text x="100" y="183" text-anchor="middle" font-size="8" fill="#fff" font-family="system-ui">BLIND</text>
+
+      <!-- Big blind (left) -->
+      <circle cx="30" cy="110" r="18" fill="#ff6b6b" stroke="#c0392b" stroke-width="2"/>
+      <text x="30" y="107" text-anchor="middle" font-size="8" fill="#fff" font-family="system-ui" font-weight="bold">BIG</text>
+      <text x="30" y="118" text-anchor="middle" font-size="8" fill="#fff" font-family="system-ui">BLIND</text>
+
+      <!-- Other players (top arc) -->
+      <circle cx="80" cy="30" r="14" fill="#555" stroke="#888" stroke-width="1.5"/>
+      <text x="80" y="34" text-anchor="middle" font-size="8" fill="#ccc" font-family="system-ui">UTG</text>
+
+      <circle cx="160" cy="18" r="14" fill="#555" stroke="#888" stroke-width="1.5"/>
+      <text x="160" y="22" text-anchor="middle" font-size="8" fill="#ccc" font-family="system-ui">MP</text>
+
+      <circle cx="240" cy="30" r="14" fill="#555" stroke="#888" stroke-width="1.5"/>
+      <text x="240" y="34" text-anchor="middle" font-size="8" fill="#ccc" font-family="system-ui">CO</text>
+
+      <!-- Arrows showing action order (pre-flop) -->
+      <path d="M118 168 L214 167" stroke="#f5c542" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <defs>
+        <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#f5c542"/>
+        </marker>
+      </defs>
+    </svg>
+    <p class="table-caption">Betting starts with UTG (under the gun) pre-flop; clockwise from there.</p>
+  </div>
+</section>
+
+<section>
   <h2>Order of play</h2>
-  <ol>
+  <ol class="rules-ordered">
     <li>Dealer posts nothing. Cards are dealt starting left of the dealer.</li>
     <li>Small blind posts the small blind (player left of dealer).</li>
     <li>Big blind posts the big blind (player left of small blind).</li>
@@ -53,7 +219,7 @@
 
 <section>
   <h2>Betting rules</h2>
-  <ul>
+  <ul class="rules-list-plain">
     <li>Minimum raise: at least the size of the previous raise in that round.</li>
     <li>All-in: a player may go all-in for less than the minimum raise; others may re-raise.</li>
     <li>Check is only allowed when no bet has been made in the current round.</li>

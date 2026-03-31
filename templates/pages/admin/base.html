@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin — Poker Manager{% endblock title %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+  {% block extra_head %}{% endblock extra_head %}
+</head>
+<body>
+<main>
+  {% block content %}{% endblock content %}
+</main>
+{% block scripts %}{% endblock scripts %}
+</body>
+</html>

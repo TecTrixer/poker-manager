@@ -17,3 +17,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = "0.4"
 dotenvy = "0.15"
+
+[dev-dependencies]
+actix-web = { version = "4", features = ["macros"] }
+actix-http = "3"

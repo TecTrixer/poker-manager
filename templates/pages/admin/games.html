@@ -1,0 +1,50 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}Games — Poker Manager{% endblock title %}
+
+{% block content %}
+  <h1>Games</h1>
+
+  <section class="game-controls">
+    <form method="POST" action="/admin/games/new">
+      <button type="submit" class="btn-primary">+ New game</button>
+    </form>
+    <a href="/admin/game">Back to control panel</a>
+  </section>
+
+  {% if games %}
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Tables</th>
+        <th>Players</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for game in games %}
+      <tr{% if game.selected %} class="current-level"{% endif %}>
+        <td>{{ game.id }}</td>
+        <td>{% if game.name %}{{ game.name }}{% else %}<span style="color:var(--text-muted)">—</span>{% endif %}</td>
+        <td>{{ game.status }}</td>
+        <td>{{ game.num_tables }}</td>
+        <td>{{ game.num_players }}</td>
+        <td>
+          <form method="POST" action="/admin/games/{{ game.id }}/select" style="display:inline">
+            <button type="submit"{% if game.selected %} disabled{% endif %}>Select</button>
+          </form>
+          <form method="POST" action="/admin/games/{{ game.id }}/delete" style="display:inline"
+                onsubmit="return confirm('Delete game #{{ game.id }}?')">
+            <button type="submit" class="btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted)">No games yet.</p>
+  {% endif %}
+{% endblock content %}

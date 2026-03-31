@@ -1,4 +1,4 @@
-use actix_web::{get, web, Responder};
+use actix_web::{get, web, HttpRequest, Responder};
 use actix_web_lab::sse;
 use std::time::Duration;
 
@@ -9,14 +9,25 @@ use crate::{
 };
 
 #[get("/sse/timer")]
-pub async fn sse_timer(state: web::Data<AppState>) -> impl Responder {
+pub async fn sse_timer(state: web::Data<AppState>, req: HttpRequest) -> impl Responder {
+    let peer = req
+        .connection_info()
+        .peer_addr()
+        .unwrap_or("unknown")
+        .to_string();
     let (tx, rx) = tokio::sync::mpsc::channel(8);
-    state.sse_senders.write().await.push(tx);
+    let client_count = {
+        let mut senders = state.sse_senders.write().await;
+        senders.push(tx);
+        senders.len()
+    };
+    tracing::info!(ip = %peer, clients = client_count, "SSE client connected");
     sse::Sse::from_infallible_receiver(rx).with_keep_alive(Duration::from_secs(15))
 }
 
 pub async fn broadcast_loop(state: web::Data<AppState>) {
     let mut interval = tokio::time::interval(Duration::from_secs(1));
+    let mut prev_client_count = 0usize;
     loop {
         interval.tick().await;
 
@@ -32,6 +43,11 @@ pub async fn broadcast_loop(state: web::Data<AppState>) {
 
         let mut senders = state.sse_senders.write().await;
         senders.retain(|tx| !tx.is_closed());
+        let current_count = senders.len();
+        if current_count != prev_client_count {
+            tracing::info!(clients = current_count, "SSE client count changed");
+            prev_client_count = current_count;
+        }
         for tx in senders.iter() {
             let _ = tx.try_send(event.clone());
         }

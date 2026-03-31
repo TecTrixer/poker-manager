@@ -11,6 +11,9 @@ pub struct Game {
     pub level_started_at: Option<i64>,
     pub paused_at: Option<i64>,
     pub paused_duration_secs: i64,
+    pub selected: i64,
+    pub name: String,
+    pub speed_steps: i64,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow, serde::Serialize)]
@@ -53,8 +56,8 @@ impl Game {
 pub async fn get_active_game(pool: &SqlitePool) -> sqlx::Result<Option<Game>> {
     sqlx::query_as::<_, Game>(
         "SELECT id, status, num_tables, num_players, current_level,
-                level_started_at, paused_at, paused_duration_secs
-         FROM games WHERE status != 'ended' ORDER BY id DESC LIMIT 1",
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
+         FROM games WHERE selected = 1 AND status != 'ended' LIMIT 1",
     )
     .fetch_optional(pool)
     .await
@@ -63,11 +66,21 @@ pub async fn get_active_game(pool: &SqlitePool) -> sqlx::Result<Option<Game>> {
 pub async fn get_game_by_id(pool: &SqlitePool, id: i64) -> sqlx::Result<Option<Game>> {
     sqlx::query_as::<_, Game>(
         "SELECT id, status, num_tables, num_players, current_level,
-                level_started_at, paused_at, paused_duration_secs
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
          FROM games WHERE id = ?",
     )
     .bind(id)
     .fetch_optional(pool)
+    .await
+}
+
+pub async fn get_all_games(pool: &SqlitePool) -> sqlx::Result<Vec<Game>> {
+    sqlx::query_as::<_, Game>(
+        "SELECT id, status, num_tables, num_players, current_level,
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
+         FROM games ORDER BY id DESC",
+    )
+    .fetch_all(pool)
     .await
 }
 
@@ -96,8 +109,12 @@ pub async fn create_game(
     num_tables: i64,
     num_players: i64,
 ) -> sqlx::Result<i64> {
+    // Deselect all others first
+    sqlx::query("UPDATE games SET selected = 0")
+        .execute(pool)
+        .await?;
     let row = sqlx::query(
-        "INSERT INTO games (status, num_tables, num_players) VALUES ('pending', ?, ?) RETURNING id",
+        "INSERT INTO games (status, num_tables, num_players, selected, name) VALUES ('pending', ?, ?, 1, '') RETURNING id",
     )
     .bind(num_tables)
     .bind(num_players)
@@ -105,6 +122,51 @@ pub async fn create_game(
     .await?;
     use sqlx::Row;
     Ok(row.get::<i64, _>("id"))
+}
+
+pub async fn select_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET selected = 0")
+        .execute(pool)
+        .await?;
+    sqlx::query("UPDATE games SET selected = 1 WHERE id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
+    sqlx::query("DELETE FROM blind_levels WHERE game_id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    sqlx::query("DELETE FROM chip_types WHERE game_id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    sqlx::query("DELETE FROM games WHERE id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn adjust_speed(pool: &SqlitePool, game_id: i64, delta: i64) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET speed_steps = speed_steps + ? WHERE id = ?")
+        .bind(delta)
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn update_game_name(pool: &SqlitePool, game_id: i64, name: &str) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET name = ? WHERE id = ?")
+        .bind(name)
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }
 
 pub async fn insert_blind_level(
@@ -152,6 +214,37 @@ pub async fn insert_chip_type(
 
 pub async fn end_all_games(pool: &SqlitePool) -> sqlx::Result<()> {
     sqlx::query("UPDATE games SET status = 'ended' WHERE status != 'ended'")
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn update_game_players(
+    pool: &SqlitePool,
+    game_id: i64,
+    num_tables: i64,
+    num_players: i64,
+) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET num_tables = ?, num_players = ? WHERE id = ?")
+        .bind(num_tables)
+        .bind(num_players)
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_chip_types(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
+    sqlx::query("DELETE FROM chip_types WHERE game_id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_blind_levels(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
+    sqlx::query("DELETE FROM blind_levels WHERE game_id = ?")
+        .bind(game_id)
         .execute(pool)
         .await?;
     Ok(())
@@ -219,7 +312,8 @@ pub async fn set_level(pool: &SqlitePool, game_id: i64, level: i64) -> sqlx::Res
 pub async fn reset_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
     sqlx::query(
         "UPDATE games SET status = 'pending', current_level = 0,
-         level_started_at = NULL, paused_at = NULL, paused_duration_secs = 0
+         level_started_at = NULL, paused_at = NULL, paused_duration_secs = 0,
+         speed_steps = 0
          WHERE id = ?",
     )
     .bind(game_id)

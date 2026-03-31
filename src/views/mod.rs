@@ -39,6 +39,10 @@ pub struct LevelAdminView {
     pub is_break: bool,
     pub label: String,
     pub is_current: bool,
+    /// Adjusted blind values for future levels when speed_steps != 0.
+    pub adjusted_small_blind: i64,
+    pub adjusted_big_blind: i64,
+    pub is_adjusted: bool,
 }
 
 pub fn format_time(secs: i64) -> String {

@@ -17,6 +17,12 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(admin::game_next_level)
         .service(admin::game_prev_level)
         .service(admin::game_reset)
+        .service(admin::game_accelerate)
+        .service(admin::game_decelerate)
         .service(admin::blind_row_component)
-        .service(admin::suggest_schedule_handler);
+        .service(admin::suggest_schedule_handler)
+        .service(admin::games_list)
+        .service(admin::games_new)
+        .service(admin::games_select)
+        .service(admin::games_delete);
 }

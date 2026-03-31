@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Control — Poker Manager</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/htmx.min.js"></script>
-  <script src="/static/sse.js"></script>
-</head>
-<body>
-<main>
+{% extends "pages/admin/base.html" %}
+{% block title %}Game Control — Poker Manager{% endblock title %}
+{% block extra_head %}<script src="/static/sse.js"></script>{% endblock extra_head %}
+
+{% block content %}
   <h1>Game Control</h1>
 
   <section class="game-status">
@@ -66,12 +59,27 @@
     </form>
     {% endif %}
 
+    {% if status == "running" or status == "paused" %}
+    <form method="POST" action="/admin/game/decelerate" style="display:inline">
+      <button type="submit" title="Slow down future blind levels by ~25%">&#9664;&#9664; Slow</button>
+    </form>
+    <form method="POST" action="/admin/game/accelerate" style="display:inline">
+      <button type="submit" title="Speed up future blind levels by ~20%">Fast &#9654;&#9654;</button>
+    </form>
+    {% if speed_steps != 0 %}
+    <span class="speed-indicator {% if speed_steps > 0 %}speed-fast{% else %}speed-slow{% endif %}">
+      {% if speed_steps > 0 %}blinds +{{ speed_steps }} steps{% else %}blinds {{ speed_steps }} steps{% endif %}
+    </span>
+    {% endif %}
+    {% endif %}
+
     <form method="POST" action="/admin/game/reset"
           onsubmit="return confirm('Reset game to start?')">
       <button type="submit" class="btn-danger">Reset</button>
     </form>
 
     <a href="/admin">Reconfigure setup</a>
+    <a href="/admin/games">All games</a>
   </section>
 
   <section class="schedule">
@@ -85,7 +93,14 @@
         <tr{% if level.is_current %} class="current-level"{% endif %}>
           <td>{{ loop.index }}</td>
           <td>{% if level.is_break %}Break{% else %}Play{% endif %}</td>
-          <td>{{ level.label }}</td>
+          <td>
+            {% if level.is_adjusted %}
+              <span class="adjusted">{{ level.adjusted_small_blind }} / {{ level.adjusted_big_blind }}</span>
+              <span class="text-muted"> (was {{ level.label }})</span>
+            {% else %}
+              {{ level.label }}
+            {% endif %}
+          </td>
           <td>{{ level.duration_mins }}min</td>
         </tr>
         {% endfor %}
@@ -110,7 +125,4 @@
     </table>
   </section>
   {% endif %}
-
-</main>
-</body>
-</html>
+{% endblock content %}

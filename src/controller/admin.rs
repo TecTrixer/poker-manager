@@ -1,16 +1,22 @@
-use actix_web::{get, post, web, HttpResponse};
+use actix_web::{get, post, web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use tera::Context;
 
 use crate::{
     models::{
-        create_game, end_all_games, get_active_game, get_blind_levels,
-        get_chip_types, insert_blind_level, insert_chip_type, pause_game, reset_game, resume_game,
-        set_level, start_game,
+        adjust_speed, create_game, delete_blind_levels, delete_chip_types, delete_game,
+        get_active_game, get_all_games, get_blind_levels, get_chip_types, insert_blind_level,
+        insert_chip_type, pause_game, reset_game, resume_game, select_game, set_level, start_game,
+        update_game_players,
     },
     views::{format_time, level_label, LevelAdminView},
     AppState,
 };
+
+fn peer_ip(req: &HttpRequest) -> String {
+    let info = req.connection_info();
+    info.peer_addr().unwrap_or("unknown").to_string()
+}
 
 fn redirect(path: &str) -> HttpResponse {
     HttpResponse::SeeOther()
@@ -31,17 +37,18 @@ fn render(state: &AppState, template: &str, ctx: &Context) -> HttpResponse {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 #[get("/admin")]
-pub async fn setup_get(state: web::Data<AppState>) -> HttpResponse {
+pub async fn setup_get(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
+    tracing::info!(ip = %ip, "GET /admin setup page");
     let game = get_active_game(&state.db).await.unwrap_or(None);
 
-    // If there's an active game that has been started, go to game control
-    if let Some(ref g) = game {
-        if g.status != "pending" {
-            return redirect("/admin/game");
-        }
-    }
-
     let mut ctx = Context::new();
+    if let Some(ref g) = game {
+        let chips = get_chip_types(&state.db, g.id).await.unwrap_or_default();
+        let levels = get_blind_levels(&state.db, g.id).await.unwrap_or_default();
+        ctx.insert("chips", &chips);
+        ctx.insert("levels", &levels);
+    }
     ctx.insert("game", &game);
     ctx.insert("num_rows", &12i64);
     render(&state, "pages/admin/setup.html", &ctx)
@@ -49,6 +56,7 @@ pub async fn setup_get(state: web::Data<AppState>) -> HttpResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct SetupForm {
+    pub game_id: Option<i64>,
     pub num_tables: i64,
     pub num_players: i64,
     pub chips: Vec<ChipFormEntry>,
@@ -76,28 +84,51 @@ pub struct LevelFormEntry {
 #[post("/admin/setup")]
 pub async fn setup_post(
     state: web::Data<AppState>,
+    req: HttpRequest,
     body: web::Bytes,
 ) -> HttpResponse {
+    let ip = peer_ip(&req);
     let qs_config = serde_qs::Config::new(5, false);
     let form: SetupForm = match qs_config.deserialize_bytes(&body) {
         Ok(f) => f,
         Err(e) => {
-            tracing::error!("Form parse error: {e}");
+            tracing::error!(ip = %ip, "Form parse error: {e}");
             return HttpResponse::BadRequest().body("Invalid form data");
         }
     };
+    tracing::info!(
+        ip = %ip,
+        game_id = ?form.game_id,
+        num_tables = form.num_tables,
+        num_players = form.num_players,
+        chip_count = form.chips.len(),
+        level_count = form.levels.len(),
+        "POST /admin/setup"
+    );
 
-    // End any existing games
-    if let Err(e) = end_all_games(&state.db).await {
-        tracing::error!("DB error: {e}");
-        return HttpResponse::InternalServerError().finish();
-    }
-
-    let game_id = match create_game(&state.db, form.num_tables, form.num_players).await {
-        Ok(id) => id,
-        Err(e) => {
-            tracing::error!("DB error: {e}");
+    // If editing an existing game, update in place (preserves timer state)
+    // Otherwise, end all games and create a fresh one
+    let game_id = if let Some(gid) = form.game_id {
+        if let Err(e) = update_game_players(&state.db, gid, form.num_tables, form.num_players).await {
+            tracing::error!("DB error updating game: {e}");
             return HttpResponse::InternalServerError().finish();
+        }
+        if let Err(e) = delete_chip_types(&state.db, gid).await {
+            tracing::error!("DB error deleting chips: {e}");
+            return HttpResponse::InternalServerError().finish();
+        }
+        if let Err(e) = delete_blind_levels(&state.db, gid).await {
+            tracing::error!("DB error deleting levels: {e}");
+            return HttpResponse::InternalServerError().finish();
+        }
+        gid
+    } else {
+        match create_game(&state.db, form.num_tables, form.num_players).await {
+            Ok(id) => id,
+            Err(e) => {
+                tracing::error!("DB error: {e}");
+                return HttpResponse::InternalServerError().finish();
+            }
         }
     };
 
@@ -185,17 +216,47 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
         })
         .unwrap_or(0);
 
+    // speed_steps: positive = faster blinds (1.25^n multiplier on future blind values)
+    //              negative = slower blinds (0.8^n multiplier, i.e. 1/1.25)
+    // 1.25 and 0.8 are exact inverses, so +1 then -1 = no change.
+    let speed_steps = game.speed_steps;
+    let speed_factor = 1.25_f64.powi(speed_steps as i32);
+
+    // Minimum chip value — adjusted blinds must always be multiples of this.
+    let min_chip = chips
+        .iter()
+        .filter(|c| c.value > 0)
+        .map(|c| c.value)
+        .min()
+        .unwrap_or(1);
+
     let levels_admin: Vec<LevelAdminView> = levels
         .iter()
-        .map(|l| LevelAdminView {
-            level_num: l.level_num,
-            small_blind: l.small_blind,
-            big_blind: l.big_blind,
-            duration_secs: l.duration_secs,
-            duration_mins: l.duration_secs / 60,
-            is_break: l.is_break,
-            label: level_label(l),
-            is_current: l.level_num == game.current_level,
+        .map(|l| {
+            // Apply multiplier only to future levels (strictly after current)
+            let is_future = (l.level_num as usize) > current_idx;
+            let (adjusted_big, adjusted_small) = if is_future && !l.is_break && speed_steps != 0 {
+                let big_raw = (l.big_blind as f64 * speed_factor).round() as i64;
+                let small_raw = (l.small_blind as f64 * speed_factor).round() as i64;
+                let big = crate::schedule::round_to_unit(big_raw, min_chip);
+                let small = crate::schedule::floor_to_unit(small_raw, min_chip);
+                (big, small)
+            } else {
+                (l.big_blind, l.small_blind)
+            };
+            LevelAdminView {
+                level_num: l.level_num,
+                small_blind: l.small_blind,
+                big_blind: l.big_blind,
+                duration_secs: l.duration_secs,
+                duration_mins: l.duration_secs / 60,
+                is_break: l.is_break,
+                label: level_label(l),
+                is_current: l.level_num == game.current_level,
+                adjusted_small_blind: adjusted_small,
+                adjusted_big_blind: adjusted_big,
+                is_adjusted: is_future && !l.is_break && speed_steps != 0,
+            }
         })
         .collect();
 
@@ -212,6 +273,7 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
     ctx.insert("next_level_info", &next_level_info);
     ctx.insert("seconds_remaining", &secs_remaining);
     ctx.insert("time_display", &format_time(secs_remaining));
+    ctx.insert("speed_steps", &speed_steps);
 
     render(&state, "pages/admin/game.html", &ctx)
 }
@@ -219,55 +281,86 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 #[post("/admin/game/start")]
-pub async fn game_start(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_start(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/start");
         let _ = start_game(&state.db, game.id).await;
     }
     redirect("/admin/game")
 }
 
 #[post("/admin/game/pause")]
-pub async fn game_pause(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_pause(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/pause");
         let _ = pause_game(&state.db, game.id).await;
     }
     redirect("/admin/game")
 }
 
 #[post("/admin/game/resume")]
-pub async fn game_resume(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_resume(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/resume");
         let _ = resume_game(&state.db, game.id).await;
     }
     redirect("/admin/game")
 }
 
 #[post("/admin/game/next")]
-pub async fn game_next_level(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_next_level(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         let levels = get_blind_levels(&state.db, game.id).await.unwrap_or_default();
         let next = game.current_level + 1;
         if next < levels.len() as i64 {
+            tracing::info!(ip = %ip, game_id = game.id, from_level = game.current_level, to_level = next, "POST /admin/game/next");
             let _ = set_level(&state.db, game.id, next).await;
-            // If game was running, keep it running (set_level already clears pause)
         }
     }
     redirect("/admin/game")
 }
 
 #[post("/admin/game/prev")]
-pub async fn game_prev_level(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_prev_level(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         let prev = (game.current_level - 1).max(0);
+        tracing::info!(ip = %ip, game_id = game.id, from_level = game.current_level, to_level = prev, "POST /admin/game/prev");
         let _ = set_level(&state.db, game.id, prev).await;
     }
     redirect("/admin/game")
 }
 
 #[post("/admin/game/reset")]
-pub async fn game_reset(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_reset(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/reset");
         let _ = reset_game(&state.db, game.id).await;
+    }
+    redirect("/admin/game")
+}
+
+#[post("/admin/game/accelerate")]
+pub async fn game_accelerate(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
+    if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, old_speed_steps = game.speed_steps, "POST /admin/game/accelerate");
+        let _ = adjust_speed(&state.db, game.id, 1).await;
+    }
+    redirect("/admin/game")
+}
+
+#[post("/admin/game/decelerate")]
+pub async fn game_decelerate(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
+    if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, old_speed_steps = game.speed_steps, "POST /admin/game/decelerate");
+        let _ = adjust_speed(&state.db, game.id, -1).await;
     }
     redirect("/admin/game")
 }
@@ -279,22 +372,36 @@ pub struct SuggestScheduleForm {
     pub num_players: i64,
     pub total_duration_mins: i64,
     pub level_duration_mins: i64,
+    #[serde(default = "default_rounds_before_break")]
+    pub rounds_before_break: i64,
     pub chips: Vec<ChipFormEntry>,
 }
+
+fn default_rounds_before_break() -> i64 { 4 }
 
 #[post("/admin/suggest-schedule")]
 pub async fn suggest_schedule_handler(
     state: web::Data<AppState>,
+    req: HttpRequest,
     body: web::Bytes,
 ) -> HttpResponse {
+    let ip = peer_ip(&req);
     let qs_config = serde_qs::Config::new(5, false);
     let form: SuggestScheduleForm = match qs_config.deserialize_bytes(&body) {
         Ok(f) => f,
         Err(e) => {
-            tracing::error!("suggest-schedule parse error: {e}");
+            tracing::error!(ip = %ip, "suggest-schedule parse error: {e}");
             return HttpResponse::BadRequest().body("Invalid form data");
         }
     };
+    tracing::info!(
+        ip = %ip,
+        num_players = form.num_players,
+        total_duration_mins = form.total_duration_mins,
+        level_duration_mins = form.level_duration_mins,
+        rounds_before_break = form.rounds_before_break,
+        "POST /admin/suggest-schedule"
+    );
     let chip_inputs: Vec<crate::schedule::ChipInput> = form
         .chips
         .iter()
@@ -308,6 +415,7 @@ pub async fn suggest_schedule_handler(
         num_players: form.num_players,
         total_duration_mins: form.total_duration_mins,
         level_duration_mins: form.level_duration_mins,
+        rounds_before_break: form.rounds_before_break.max(1) as usize,
     };
     let levels = crate::schedule::suggest_schedule(&input);
     let level_count = levels.len();
@@ -334,4 +442,68 @@ pub async fn blind_row_component(
     ctx.insert("oob_update", &true);
     ctx.insert("next_index", &(query.index + 1));
     render(&state, "components/blind_row.html", &ctx)
+}
+
+// ── Game management ───────────────────────────────────────────────────────────
+
+#[get("/admin/games")]
+pub async fn games_list(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
+    tracing::info!(ip = %ip, "GET /admin/games");
+    let games = get_all_games(&state.db).await.unwrap_or_default();
+    let active = get_active_game(&state.db).await.unwrap_or(None);
+    let mut ctx = Context::new();
+    ctx.insert("games", &games);
+    ctx.insert("active_game", &active);
+    render(&state, "pages/admin/games.html", &ctx)
+}
+
+#[post("/admin/games/new")]
+pub async fn games_new(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    let ip = peer_ip(&req);
+    tracing::info!(ip = %ip, "POST /admin/games/new — creating new game");
+    match create_game(&state.db, 1, 8).await {
+        Ok(id) => {
+            tracing::info!(ip = %ip, game_id = id, "New game created");
+        }
+        Err(e) => {
+            tracing::error!(ip = %ip, "DB error creating game: {e}");
+        }
+    }
+    redirect("/admin/games")
+}
+
+#[derive(Deserialize)]
+pub struct GameIdPath {
+    pub id: i64,
+}
+
+#[post("/admin/games/{id}/select")]
+pub async fn games_select(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    path: web::Path<GameIdPath>,
+) -> HttpResponse {
+    let ip = peer_ip(&req);
+    let game_id = path.id;
+    tracing::info!(ip = %ip, game_id = game_id, "POST /admin/games/select");
+    if let Err(e) = select_game(&state.db, game_id).await {
+        tracing::error!(ip = %ip, "DB error selecting game: {e}");
+    }
+    redirect("/admin/games")
+}
+
+#[post("/admin/games/{id}/delete")]
+pub async fn games_delete(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    path: web::Path<GameIdPath>,
+) -> HttpResponse {
+    let ip = peer_ip(&req);
+    let game_id = path.id;
+    tracing::info!(ip = %ip, game_id = game_id, "POST /admin/games/delete");
+    if let Err(e) = delete_game(&state.db, game_id).await {
+        tracing::error!(ip = %ip, "DB error deleting game: {e}");
+    }
+    redirect("/admin/games")
 }

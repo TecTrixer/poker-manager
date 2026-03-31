@@ -1,16 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Setup — Poker Manager</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/htmx.min.js"></script>
-</head>
-<body>
-<main>
+{% extends "pages/admin/base.html" %}
+{% block title %}Setup — Poker Manager{% endblock title %}
+
+{% block content %}
   <h1>Game Setup</h1>
+  {% if game and game.status != "pending" %}
+  <p class="notice-banner">Editing a <strong>{{ game.status }}</strong> game. Saving will replace chips and schedule; the timer state is preserved.</p>
+  {% endif %}
   <form method="POST" action="/admin/setup">
+    {% if game %}
+    <input type="hidden" name="game_id" value="{{ game.id }}">
+    {% endif %}
 
     <fieldset>
       <legend>Game</legend>
@@ -21,16 +20,31 @@
     <fieldset>
       <legend>Chips</legend>
       <div class="row-header">
-        <span>Color</span><span>Value</span><span>Total count</span>
+        <span>Color</span><span>Value</span><span>Total count</span><span></span>
       </div>
-      {% for i in range(end=6) %}
-      {% set index = i %}
-      <div class="chip-row">
-        <input type="text" name="chips[{{ index }}][color]" placeholder="e.g. White">
-        <input type="number" name="chips[{{ index }}][value]" placeholder="Value" min="0" value="0">
-        <input type="number" name="chips[{{ index }}][total]" placeholder="Total" min="0" value="0">
+      <div id="chip-rows">
+        {% if chips %}
+          {% for chip in chips %}
+          <div class="chip-row">
+            <input type="text" name="chips[{{ loop.index0 }}][color]" placeholder="e.g. White" value="{{ chip.color }}">
+            <input type="number" name="chips[{{ loop.index0 }}][value]" placeholder="Value" min="0" value="{{ chip.value }}">
+            <input type="number" name="chips[{{ loop.index0 }}][total]" placeholder="Total" min="0" value="{{ chip.total_count }}">
+            <button type="button" class="btn-delete" onclick="deleteRow(this, 'chip-row', 'chips')">✕</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          {% for i in range(end=6) %}
+          <div class="chip-row">
+            <input type="text" name="chips[{{ i }}][color]" placeholder="e.g. White">
+            <input type="number" name="chips[{{ i }}][value]" placeholder="Value" min="0" value="0">
+            <input type="number" name="chips[{{ i }}][total]" placeholder="Total" min="0" value="0">
+            <button type="button" class="btn-delete" onclick="deleteRow(this, 'chip-row', 'chips')">✕</button>
+          </div>
+          {% endfor %}
+        {% endif %}
       </div>
-      {% endfor %}
+      <input type="hidden" id="chip_count" value="{% if chips %}{{ chips | length }}{% else %}6{% endif %}">
+      <button type="button" onclick="addChipRow()">+ Add chip type</button>
     </fieldset>
 
     <fieldset>
@@ -40,6 +54,9 @@
       </label>
       <label>Level duration (minutes)
         <input type="number" name="level_duration_mins" value="20" min="1">
+      </label>
+      <label>Rounds before break
+        <input type="number" name="rounds_before_break" value="4" min="1" max="20">
       </label>
       <button type="button"
               hx-post="/admin/suggest-schedule"
@@ -53,15 +70,31 @@
     <fieldset>
       <legend>Blind schedule</legend>
       <div class="row-header level-row-header">
-        <span>Type</span><span>Small</span><span>Big</span><span>Minutes</span>
+        <span>Type</span><span>Small</span><span>Big</span><span>Minutes</span><span></span>
       </div>
       <div id="blind-levels">
-        {% for i in range(end=num_rows) %}
-        {% set index = i %}
-        {% include "components/blind_row.html" %}
-        {% endfor %}
+        {% if levels %}
+          {% for level in levels %}
+          {% set index = loop.index0 %}
+          <div class="level-row">
+            <select name="levels[{{ index }}][is_break]">
+              <option value="false"{% if not level.is_break %} selected{% endif %}>Play</option>
+              <option value="true"{% if level.is_break %} selected{% endif %}>Break</option>
+            </select>
+            <input type="number" name="levels[{{ index }}][small]" placeholder="Small blind" min="0" value="{{ level.small_blind }}">
+            <input type="number" name="levels[{{ index }}][big]" placeholder="Big blind" min="0" value="{{ level.big_blind }}">
+            <input type="number" name="levels[{{ index }}][duration]" placeholder="Minutes" min="1" value="{{ level.duration_secs / 60 }}">
+            <button type="button" class="btn-delete" onclick="deleteRow(this, 'level-row', 'levels')">✕</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          {% for i in range(end=num_rows) %}
+          {% set index = i %}
+          {% include "components/blind_row.html" %}
+          {% endfor %}
+        {% endif %}
       </div>
-      <input type="hidden" id="level_count" name="index" value="{{ num_rows }}">
+      <input type="hidden" id="level_count" name="index" value="{% if levels %}{{ levels | length }}{% else %}{{ num_rows }}{% endif %}">
       <button type="button"
               hx-get="/admin/components/blind-row"
               hx-include="#level_count"
@@ -73,6 +106,43 @@
 
     <button type="submit">Save &amp; continue</button>
   </form>
-</main>
-</body>
-</html>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+function deleteRow(btn, rowClass, prefix) {
+  const row = btn.closest('.' + rowClass);
+  const container = row.parentElement;
+  row.remove();
+  reindexRows(container, rowClass, prefix);
+}
+
+function reindexRows(container, rowClass, prefix) {
+  const rows = container.querySelectorAll('.' + rowClass);
+  rows.forEach(function(row, i) {
+    row.querySelectorAll('input, select').forEach(function(el) {
+      if (el.name) {
+        el.name = el.name.replace(/\[\d+\]/, '[' + i + ']');
+      }
+    });
+  });
+  const countEl = document.getElementById(prefix === 'chips' ? 'chip_count' : 'level_count');
+  if (countEl) countEl.value = rows.length;
+}
+
+function addChipRow() {
+  const container = document.getElementById('chip-rows');
+  const countEl = document.getElementById('chip_count');
+  const idx = parseInt(countEl.value, 10);
+  const div = document.createElement('div');
+  div.className = 'chip-row';
+  div.innerHTML =
+    '<input type="text" name="chips[' + idx + '][color]" placeholder="e.g. White">' +
+    '<input type="number" name="chips[' + idx + '][value]" placeholder="Value" min="0" value="0">' +
+    '<input type="number" name="chips[' + idx + '][total]" placeholder="Total" min="0" value="0">' +
+    '<button type="button" class="btn-delete" onclick="deleteRow(this, \'chip-row\', \'chips\')">✕</button>';
+  container.appendChild(div);
+  countEl.value = idx + 1;
+}
+</script>
+{% endblock scripts %}

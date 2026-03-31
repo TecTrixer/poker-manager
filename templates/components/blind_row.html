@@ -6,7 +6,8 @@
   <input type="number" name="levels[{{ index }}][small]" placeholder="Small blind" min="0" value="0">
   <input type="number" name="levels[{{ index }}][big]" placeholder="Big blind" min="0" value="0">
   <input type="number" name="levels[{{ index }}][duration]" placeholder="Minutes" min="1" value="15">
+  <button type="button" class="btn-delete" onclick="deleteRow(this, 'level-row', 'levels')">✕</button>
 </div>
 {% if oob_update %}
-<input id="level_count" name="index" value="{{ next_index }}" hx-swap-oob="true">
+<input type="hidden" id="level_count" name="index" value="{{ next_index }}" hx-swap-oob="true">
 {% endif %}

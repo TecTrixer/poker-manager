@@ -111,6 +111,7 @@ fn test_suggest_schedule_basic() {
         num_players: 8,
         total_duration_mins: 120,
         level_duration_mins: 20,
+        rounds_before_break: 4,
     };
     let levels = suggest_schedule(&input);
     assert_eq!(levels.len(), 6);
@@ -144,6 +145,7 @@ fn test_suggest_schedule_edge_cases() {
         num_players: 0,
         total_duration_mins: 60,
         level_duration_mins: 15,
+        rounds_before_break: 4,
     });
     assert!(result.is_empty());
 
@@ -153,6 +155,7 @@ fn test_suggest_schedule_edge_cases() {
         num_players: 8,
         total_duration_mins: 0,
         level_duration_mins: 15,
+        rounds_before_break: 4,
     });
     assert!(result.is_empty());
 
@@ -162,6 +165,7 @@ fn test_suggest_schedule_edge_cases() {
         num_players: 8,
         total_duration_mins: 60,
         level_duration_mins: 15,
+        rounds_before_break: 4,
     });
     assert!(result.is_empty());
 }
@@ -181,6 +185,7 @@ fn test_suggest_schedule_realistic() {
         num_players: 8,
         total_duration_mins: 180,
         level_duration_mins: 20,
+        rounds_before_break: 4,
     };
     let levels = suggest_schedule(&input);
     assert_eq!(levels.len(), 9);
