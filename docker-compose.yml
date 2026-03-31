@@ -1,0 +1,15 @@
+services:
+  poker-manager:
+    build: .
+    ports:
+      - "${HOST_PORT:-8080}:${PORT:-8080}"
+    environment:
+      PORT: "${PORT:-8080}"
+      DATABASE_URL: "${DATABASE_URL:-sqlite:/data/poker.db?mode=rwc}"
+      RUST_LOG: "${RUST_LOG:-info}"
+    volumes:
+      - poker-data:/data
+    restart: unless-stopped
+
+volumes:
+  poker-data:

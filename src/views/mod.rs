@@ -65,7 +65,11 @@ pub fn build_timer_view(
 ) -> TimerView {
     let current_idx = game.current_level as usize;
     let current = levels.get(current_idx);
-    let next = levels.get(current_idx + 1);
+    let next = if game.status == "pending" {
+        levels.get(current_idx)
+    } else {
+        levels.get(current_idx + 1)
+    };
 
     let (seconds_remaining, time_display) = match current {
         Some(lvl) => {
