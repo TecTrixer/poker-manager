@@ -362,7 +362,7 @@ button:hover { border-color: var(--accent); }
 .card-svg {
   height: 52px;
   width: auto;
-  border-radius: 3px;
+  border-radius: 2px;
   display: inline-block;
   background: #fff;
 }
@@ -397,6 +397,8 @@ button:hover { border-color: var(--accent); }
 @media (min-width: 640px) {
   .hands-compact {
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(5, auto);
+    grid-auto-flow: column;
     column-gap: 2rem;
   }
 }

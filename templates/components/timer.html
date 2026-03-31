@@ -1,6 +1,6 @@
 {% if has_game %}
 {% set s = timer.status %}
-<section class="timer-block{% if s == " paused" %} paused{% endif %}">
+<section class="timer-block{% if s == 'paused' %} paused{% endif %}">
   <div class="blinds-current">
     {% if s == "pending" %}
     <span class="status-label">Waiting to start</span>
@@ -14,7 +14,7 @@
     <span class="separator">/</span>
     <span class="blind-value">{{ timer.current_level.big_blind }}</span>
     {% endif %}
-    <div class="timer-countdown{% if s == " paused" %} paused{% endif %}">
+    <div class="timer-countdown{% if s == 'paused' %} paused{% endif %}">
       {{ timer.time_display }}
     </div>
     {% else %}

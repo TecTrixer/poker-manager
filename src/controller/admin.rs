@@ -9,7 +9,7 @@ use crate::{
         insert_chip_type, pause_game, reset_game, reset_speed, resume_game, select_game, set_level,
         start_game, update_game_players,
     },
-    views::{format_time, level_label, LevelAdminView},
+    views::{build_timer_view, level_label, LevelAdminView},
     AppState,
 };
 
@@ -210,33 +210,9 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
     let levels = get_blind_levels(&state.db, game.id).await.unwrap_or_default();
     let chips = get_chip_types(&state.db, game.id).await.unwrap_or_default();
 
-    let current_idx = game.current_level as usize;
-    let current_level_info = levels.get(current_idx).map(|l| crate::views::LevelView {
-        small_blind: l.small_blind,
-        big_blind: l.big_blind,
-        duration_secs: l.duration_secs,
-        duration_mins: l.duration_secs / 60,
-        is_break: l.is_break,
-        label: level_label(l),
-    });
-    let next_level_info = levels.get(current_idx + 1).map(|l| crate::views::LevelView {
-        small_blind: l.small_blind,
-        big_blind: l.big_blind,
-        duration_secs: l.duration_secs,
-        duration_mins: l.duration_secs / 60,
-        is_break: l.is_break,
-        label: level_label(l),
-    });
+    let timer = build_timer_view(&game, &levels);
 
-    let secs_remaining = current_level_info
-        .as_ref()
-        .map(|_| {
-            levels
-                .get(current_idx)
-                .map(|l| game.seconds_remaining(l))
-                .unwrap_or(0)
-        })
-        .unwrap_or(0);
+    let current_idx = game.current_level as usize;
 
     // speed_steps: positive = faster blinds (1.25^n multiplier on future blind values)
     //              negative = slower blinds (0.8^n multiplier, i.e. 1/1.25)
@@ -291,10 +267,8 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
     ctx.insert("total_levels", &levels.len());
     ctx.insert("levels", &levels_admin);
     ctx.insert("chips", &chips);
-    ctx.insert("current_level_info", &current_level_info);
-    ctx.insert("next_level_info", &next_level_info);
-    ctx.insert("seconds_remaining", &secs_remaining);
-    ctx.insert("time_display", &format_time(secs_remaining));
+    ctx.insert("timer", &timer);
+    ctx.insert("has_game", &true);
     ctx.insert("speed_steps", &speed_steps);
 
     render(&state, "pages/admin/game.html", &ctx)

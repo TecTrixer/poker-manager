@@ -11,27 +11,7 @@
 
   <section class="timer-admin" hx-ext="sse" sse-connect="/sse/timer">
     <div id="timer-display" sse-swap="timer">
-      {% if current_level_info %}
-        <div class="blinds-current">
-          {% if current_level_info.is_break %}
-            <span class="break-label">BREAK</span>
-          {% else %}
-            <span class="blind-value">{{ current_level_info.small_blind }}</span>
-            <span class="separator">/</span>
-            <span class="blind-value">{{ current_level_info.big_blind }}</span>
-          {% endif %}
-          <div class="timer-countdown{% if status == "paused" %} paused{% endif %}">
-            {{ time_display }}
-          </div>
-        </div>
-        {% if next_level_info %}
-        <div class="blinds-next">
-          Next: {% if next_level_info.is_break %}BREAK{% else %}{{ next_level_info.small_blind }} / {{ next_level_info.big_blind }}{% endif %}
-        </div>
-        {% endif %}
-      {% else %}
-        <span class="status-label">Game not started</span>
-      {% endif %}
+      {% include "components/timer.html" %}
     </div>
   </section>
 
