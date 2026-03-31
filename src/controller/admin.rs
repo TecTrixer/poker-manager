@@ -6,8 +6,8 @@ use crate::{
     models::{
         adjust_speed, create_game, delete_blind_levels, delete_chip_types, delete_game,
         get_active_game, get_all_games, get_blind_levels, get_chip_types, insert_blind_level,
-        insert_chip_type, pause_game, reset_game, resume_game, select_game, set_level, start_game,
-        update_game_players,
+        insert_chip_type, pause_game, reset_game, reset_speed, resume_game, select_game, set_level,
+        start_game, update_game_players,
     },
     views::{format_time, level_label, LevelAdminView},
     AppState,
@@ -45,9 +45,28 @@ pub async fn setup_get(state: web::Data<AppState>, req: HttpRequest) -> HttpResp
     let mut ctx = Context::new();
     if let Some(ref g) = game {
         let chips = get_chip_types(&state.db, g.id).await.unwrap_or_default();
-        let levels = get_blind_levels(&state.db, g.id).await.unwrap_or_default();
+        let mut levels = get_blind_levels(&state.db, g.id).await.unwrap_or_default();
+
+        // Pre-populate the form with speed-adjusted values so the admin can accept them by saving.
+        if g.speed_steps != 0 {
+            let speed_factor = 1.25_f64.powi(g.speed_steps as i32);
+            let min_chip = chips.iter().filter(|c| c.value > 0).map(|c| c.value).min().unwrap_or(1);
+            let current_idx = g.current_level as usize;
+            for level in levels.iter_mut() {
+                if (level.level_num as usize) > current_idx && !level.is_break {
+                    level.big_blind = crate::schedule::round_to_unit(
+                        (level.big_blind as f64 * speed_factor).round() as i64, min_chip,
+                    );
+                    level.small_blind = crate::schedule::floor_to_unit(
+                        (level.small_blind as f64 * speed_factor).round() as i64, min_chip,
+                    );
+                }
+            }
+        }
+
         ctx.insert("chips", &chips);
         ctx.insert("levels", &levels);
+        ctx.insert("speed_steps", &g.speed_steps);
     }
     ctx.insert("game", &game);
     ctx.insert("num_rows", &12i64);
@@ -168,6 +187,9 @@ pub async fn setup_post(
         }
         level_num += 1;
     }
+
+    // Reset speed_steps so the adjusted values are now the new baseline.
+    let _ = reset_speed(&state.db, game_id).await;
 
     redirect("/admin/game")
 }

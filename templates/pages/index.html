@@ -3,33 +3,141 @@
 {% block title %}Poker Timer{% endblock title %}
 
 {% block content %}
-<div hx-ext="sse" sse-connect="/sse/timer">
-  <div id="timer-display" sse-swap="timer">
-    {% include "components/timer.html" %}
+<div class="main-layout">
+  <div class="timer-col" hx-ext="sse" sse-connect="/sse/timer">
+    <div id="timer-display" sse-swap="timer">
+      {% include "components/timer.html" %}
+    </div>
   </div>
+
+  {% if has_game and chips %}
+  <section class="chip-col">
+    <h2>Chip values</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Color</th>
+          <th>Value</th>
+          <th>Per player</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for chip in chips %}
+        <tr>
+          <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
+          <td>{{ chip.value }}</td>
+          <td>{{ chip.chips_per_player }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
 </div>
 
-{% if has_game and chips %}
-<section class="chip-section">
-  <h2>Chip values</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Color</th>
-        <th>Value</th>
-        <th>Per player</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for chip in chips %}
-      <tr>
-        <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
-        <td>{{ chip.value }}</td>
-        <td>{{ chip.chips_per_player }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<section class="hands-overview">
+  <h2>Hand rankings</h2>
+  <ol class="hands-compact">
+    <li>
+      <span class="hand-name">Royal Flush</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Ah.svg" alt="A♥" class="card-svg-sm">
+        <img src="/static/cards/Kh.svg" alt="K♥" class="card-svg-sm">
+        <img src="/static/cards/Qh.svg" alt="Q♥" class="card-svg-sm">
+        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
+        <img src="/static/cards/Th.svg" alt="10♥" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Straight Flush</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/9s.svg" alt="9♠" class="card-svg-sm">
+        <img src="/static/cards/8s.svg" alt="8♠" class="card-svg-sm">
+        <img src="/static/cards/7s.svg" alt="7♠" class="card-svg-sm">
+        <img src="/static/cards/6s.svg" alt="6♠" class="card-svg-sm">
+        <img src="/static/cards/5s.svg" alt="5♠" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Four of a Kind</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Ks.svg" alt="K♠" class="card-svg-sm">
+        <img src="/static/cards/Kh.svg" alt="K♥" class="card-svg-sm">
+        <img src="/static/cards/Kd.svg" alt="K♦" class="card-svg-sm">
+        <img src="/static/cards/Kc.svg" alt="K♣" class="card-svg-sm">
+        <img src="/static/cards/7s.svg" alt="7♠" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Full House</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Qs.svg" alt="Q♠" class="card-svg-sm">
+        <img src="/static/cards/Qh.svg" alt="Q♥" class="card-svg-sm">
+        <img src="/static/cards/Qc.svg" alt="Q♣" class="card-svg-sm">
+        <img src="/static/cards/Jd.svg" alt="J♦" class="card-svg-sm">
+        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Flush</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Ad.svg" alt="A♦" class="card-svg-sm">
+        <img src="/static/cards/Jd.svg" alt="J♦" class="card-svg-sm">
+        <img src="/static/cards/8d.svg" alt="8♦" class="card-svg-sm">
+        <img src="/static/cards/5d.svg" alt="5♦" class="card-svg-sm">
+        <img src="/static/cards/2d.svg" alt="2♦" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Straight</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Th.svg" alt="10♥" class="card-svg-sm">
+        <img src="/static/cards/9s.svg" alt="9♠" class="card-svg-sm">
+        <img src="/static/cards/8d.svg" alt="8♦" class="card-svg-sm">
+        <img src="/static/cards/7c.svg" alt="7♣" class="card-svg-sm">
+        <img src="/static/cards/6h.svg" alt="6♥" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Three of a Kind</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/8s.svg" alt="8♠" class="card-svg-sm">
+        <img src="/static/cards/8h.svg" alt="8♥" class="card-svg-sm">
+        <img src="/static/cards/8c.svg" alt="8♣" class="card-svg-sm">
+        <img src="/static/cards/Kd.svg" alt="K♦" class="card-svg-sm">
+        <img src="/static/cards/3s.svg" alt="3♠" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">Two Pair</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/As.svg" alt="A♠" class="card-svg-sm">
+        <img src="/static/cards/Ah.svg" alt="A♥" class="card-svg-sm">
+        <img src="/static/cards/7c.svg" alt="7♣" class="card-svg-sm">
+        <img src="/static/cards/7d.svg" alt="7♦" class="card-svg-sm">
+        <img src="/static/cards/2s.svg" alt="2♠" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">One Pair</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
+        <img src="/static/cards/Js.svg" alt="J♠" class="card-svg-sm">
+        <img src="/static/cards/9c.svg" alt="9♣" class="card-svg-sm">
+        <img src="/static/cards/5d.svg" alt="5♦" class="card-svg-sm">
+        <img src="/static/cards/2s.svg" alt="2♠" class="card-svg-sm">
+      </div>
+    </li>
+    <li>
+      <span class="hand-name">High Card</span>
+      <div class="hand-cards-sm">
+        <img src="/static/cards/As.svg" alt="A♠" class="card-svg-sm">
+        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
+        <img src="/static/cards/9c.svg" alt="9♣" class="card-svg-sm">
+        <img src="/static/cards/6d.svg" alt="6♦" class="card-svg-sm">
+        <img src="/static/cards/2h.svg" alt="2♥" class="card-svg-sm">
+      </div>
+    </li>
+  </ol>
 </section>
-{% endif %}
 {% endblock content %}

@@ -297,15 +297,28 @@ pub async fn resume_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
 
 pub async fn set_level(pool: &SqlitePool, game_id: i64, level: i64) -> sqlx::Result<()> {
     let now = Utc::now().timestamp();
+    // If the game is paused, keep it paused at the new level (paused_at = now → 0 elapsed).
+    // This fixes the bug where switching levels while paused would clear paused_at but leave
+    // status = 'paused', making resume impossible.
     sqlx::query(
         "UPDATE games SET current_level = ?, level_started_at = ?,
-         paused_at = NULL, paused_duration_secs = 0 WHERE id = ?",
+         paused_at = CASE WHEN status = 'paused' THEN ? ELSE NULL END,
+         paused_duration_secs = 0 WHERE id = ?",
     )
     .bind(level)
+    .bind(now)
     .bind(now)
     .bind(game_id)
     .execute(pool)
     .await?;
+    Ok(())
+}
+
+pub async fn reset_speed(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET speed_steps = 0 WHERE id = ?")
+        .bind(game_id)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 

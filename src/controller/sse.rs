@@ -3,7 +3,7 @@ use actix_web_lab::sse;
 use std::time::Duration;
 
 use crate::{
-    models::{get_active_game, get_blind_levels},
+    models::{get_active_game, get_blind_levels, set_level},
     views::build_timer_view,
     AppState,
 };
@@ -31,6 +31,9 @@ pub async fn broadcast_loop(state: web::Data<AppState>) {
     loop {
         interval.tick().await;
 
+        // Auto-advance to the next level when the current one expires.
+        advance_if_needed(&state).await;
+
         let html = match render_timer_fragment(&state).await {
             Ok(h) => h,
             Err(e) => {
@@ -50,6 +53,35 @@ pub async fn broadcast_loop(state: web::Data<AppState>) {
         }
         for tx in senders.iter() {
             let _ = tx.try_send(event.clone());
+        }
+    }
+}
+
+/// Advance to the next blind level when the current level's timer reaches zero.
+/// Does nothing if at the last level (stays at 00:00) or the game is not running.
+async fn advance_if_needed(state: &AppState) {
+    let game = match get_active_game(&state.db).await {
+        Ok(Some(g)) => g,
+        _ => return,
+    };
+    if game.status != "running" {
+        return;
+    }
+    let levels = get_blind_levels(&state.db, game.id).await.unwrap_or_default();
+    let current_idx = game.current_level as usize;
+    if let Some(level) = levels.get(current_idx) {
+        if game.seconds_remaining(level) == 0 {
+            let next = game.current_level + 1;
+            if (next as usize) < levels.len() {
+                tracing::info!(
+                    game_id = game.id,
+                    from = game.current_level,
+                    to = next,
+                    "Auto-advancing blind level"
+                );
+                let _ = set_level(&state.db, game.id, next).await;
+            }
+            // Last level: do nothing — timer stays at 00:00.
         }
     }
 }

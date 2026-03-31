@@ -6,6 +6,9 @@
   {% if game and game.status != "pending" %}
   <p class="notice-banner">Editing a <strong>{{ game.status }}</strong> game. Saving will replace chips and schedule; the timer state is preserved.</p>
   {% endif %}
+  {% if speed_steps and speed_steps != 0 %}
+  <p class="notice-banner">Speed adjustment active ({% if speed_steps > 0 %}+{% endif %}{{ speed_steps }} steps). Future blind levels below already show the adjusted values — save to apply them.</p>
+  {% endif %}
   <form method="POST" action="/admin/setup">
     {% if game %}
     <input type="hidden" name="game_id" value="{{ game.id }}">

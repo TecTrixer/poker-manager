@@ -116,7 +116,7 @@
       <tbody>
         {% for chip in chips %}
         <tr>
-          <td>{{ chip.color }}</td>
+          <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
           <td>{{ chip.value }}</td>
           <td>{{ chip.total_count }}</td>
         </tr>

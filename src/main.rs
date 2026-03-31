@@ -1,5 +1,5 @@
 use actix_files::Files;
-use actix_web::{web, App, HttpServer};
+use actix_web::{middleware::DefaultHeaders, web, App, HttpServer};
 use tera::Tera;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -40,7 +40,11 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(state_data.clone())
-            .service(Files::new("/static", "static").prefer_utf8(true))
+            .service(
+                web::scope("/static")
+                    .wrap(DefaultHeaders::new().add(("Cache-Control", "public, max-age=604800")))
+                    .service(Files::new("", "static").prefer_utf8(true)),
+            )
             .configure(controller::routes)
     })
     .bind(format!("0.0.0.0:{port}"))?

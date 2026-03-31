@@ -4,7 +4,7 @@ description: Current implementation status and key architectural decisions for t
 type: project
 ---
 
-Basic functionality has been implemented. The app builds and all routes return 200.
+All TODO items from TODO.md (as of 2026-03-31) have been implemented. The app builds and all 34 tests pass.
 
 **Why:** This is a from-scratch Rust/actix-web poker tournament timer app.
 

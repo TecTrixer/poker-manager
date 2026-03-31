@@ -51,7 +51,7 @@ header nav a {
 header nav a:hover { color: var(--text); }
 
 main {
-  max-width: 760px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 1.5rem;
 }
@@ -331,6 +331,106 @@ button:hover { border-color: var(--accent); }
   color: var(--paused);
 }
 
+/* ── Main layout (desktop: side-by-side timer + chips) ─────────────────── */
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .main-layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .timer-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .chip-col {
+    width: 220px;
+    flex-shrink: 0;
+  }
+}
+
+/* ── SVG playing cards ───────────────────────────────────────────────────── */
+
+.card-svg {
+  height: 52px;
+  width: auto;
+  border-radius: 3px;
+  display: inline-block;
+  background: #fff;
+}
+
+@media (max-width: 480px) {
+  .card-svg { height: 40px; }
+}
+
+.card-svg-sm {
+  height: 40px;
+  width: auto;
+  border-radius: 2px;
+  display: inline-block;
+  background: #fff;
+}
+
+/* ── Compact hand rankings (player index page) ───────────────────────────── */
+
+.hands-overview {
+  margin-top: 2rem;
+}
+
+.hands-compact {
+  list-style: none;
+  counter-reset: hand-counter;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 640px) {
+  .hands-compact {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+  }
+}
+
+.hands-compact > li {
+  counter-increment: hand-counter;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.hands-compact > li::before {
+  content: counter(hand-counter);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  min-width: 1.2rem;
+  flex-shrink: 0;
+}
+
+.hand-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 8.5rem;
+  flex-shrink: 0;
+}
+
+.hand-cards-sm {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 /* ── Rules page ─────────────────────────────────────────────────────────── */
 
 .hand-rankings {
@@ -378,39 +478,7 @@ button:hover { border-color: var(--accent); }
   flex-shrink: 0;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.card {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 2px 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  line-height: 1.1;
-  min-width: 1.8rem;
-  text-align: center;
-  color: var(--text);
-}
-
-.card sub {
-  font-size: 0.65rem;
-  margin-left: 1px;
-}
-
-.card.suit-hearts,
-.card.suit-diamonds {
-  color: #c0392b;
-}
-
-@media (prefers-color-scheme: dark) {
-  .card.suit-hearts,
-  .card.suit-diamonds {
-    color: #ff6b6b;
-  }
+  align-items: flex-end;
 }
 
 .rules-ordered {
