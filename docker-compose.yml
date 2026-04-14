@@ -10,6 +10,11 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin}"
     volumes:
       - poker-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8080}/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
 volumes:

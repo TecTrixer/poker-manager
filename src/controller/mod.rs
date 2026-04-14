@@ -2,10 +2,16 @@ pub mod admin;
 pub mod player;
 pub mod sse;
 
-use actix_web::web;
+use actix_web::{get, web, HttpResponse};
+
+#[get("/health")]
+async fn health() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
 
 pub fn routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(player::index)
+    cfg.service(health)
+        .service(player::index)
         .service(player::rules)
         .service(sse::sse_timer)
         .service(admin::admin_login_page)
