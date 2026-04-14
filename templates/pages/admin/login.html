@@ -1,0 +1,16 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}Admin Login — Poker Manager{% endblock title %}
+
+{% block content %}
+  <h1>Admin Login</h1>
+  {% if error %}
+  <p style="color: var(--danger);">{{ error }}</p>
+  {% endif %}
+  <form method="POST" action="/admin/login" style="max-width: 300px;">
+    <label>
+      Password
+      <input type="password" name="password" autofocus>
+    </label>
+    <button type="submit" class="btn-primary">Log in</button>
+  </form>
+{% endblock content %}

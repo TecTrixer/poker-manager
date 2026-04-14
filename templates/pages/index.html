@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Poker Timer{% endblock title %}
+{% block body_class %} class="page-timer"{% endblock body_class %}
 
 {% block content %}
 <div class="main-layout">
@@ -18,7 +19,6 @@
         <tr>
           <th>Color</th>
           <th>Value</th>
-          <th>Per player</th>
         </tr>
       </thead>
       <tbody>
@@ -26,7 +26,6 @@
         <tr>
           <td><span class="chip-dot chip-{{ chip.color | lower }}"></span> {{ chip.color }}</td>
           <td>{{ chip.value }}</td>
-          <td>{{ chip.chips_per_player }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -34,110 +33,54 @@
   </section>
   {% endif %}
 </div>
-
-<section class="hands-overview">
-  <h2>Hand rankings</h2>
-  <ol class="hands-compact">
-    <li>
-      <span class="hand-name">Royal Flush</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Ah.svg" alt="A♥" class="card-svg-sm">
-        <img src="/static/cards/Kh.svg" alt="K♥" class="card-svg-sm">
-        <img src="/static/cards/Qh.svg" alt="Q♥" class="card-svg-sm">
-        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
-        <img src="/static/cards/Th.svg" alt="10♥" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Straight Flush</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/9s.svg" alt="9♠" class="card-svg-sm">
-        <img src="/static/cards/8s.svg" alt="8♠" class="card-svg-sm">
-        <img src="/static/cards/7s.svg" alt="7♠" class="card-svg-sm">
-        <img src="/static/cards/6s.svg" alt="6♠" class="card-svg-sm">
-        <img src="/static/cards/5s.svg" alt="5♠" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Four of a Kind</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Ks.svg" alt="K♠" class="card-svg-sm">
-        <img src="/static/cards/Kh.svg" alt="K♥" class="card-svg-sm">
-        <img src="/static/cards/Kd.svg" alt="K♦" class="card-svg-sm">
-        <img src="/static/cards/Kc.svg" alt="K♣" class="card-svg-sm">
-        <img src="/static/cards/7s.svg" alt="7♠" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Full House</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Qs.svg" alt="Q♠" class="card-svg-sm">
-        <img src="/static/cards/Qh.svg" alt="Q♥" class="card-svg-sm">
-        <img src="/static/cards/Qc.svg" alt="Q♣" class="card-svg-sm">
-        <img src="/static/cards/Jd.svg" alt="J♦" class="card-svg-sm">
-        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Flush</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Ad.svg" alt="A♦" class="card-svg-sm">
-        <img src="/static/cards/Jd.svg" alt="J♦" class="card-svg-sm">
-        <img src="/static/cards/8d.svg" alt="8♦" class="card-svg-sm">
-        <img src="/static/cards/5d.svg" alt="5♦" class="card-svg-sm">
-        <img src="/static/cards/2d.svg" alt="2♦" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Straight</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Th.svg" alt="10♥" class="card-svg-sm">
-        <img src="/static/cards/9s.svg" alt="9♠" class="card-svg-sm">
-        <img src="/static/cards/8d.svg" alt="8♦" class="card-svg-sm">
-        <img src="/static/cards/7c.svg" alt="7♣" class="card-svg-sm">
-        <img src="/static/cards/6h.svg" alt="6♥" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Three of a Kind</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/8s.svg" alt="8♠" class="card-svg-sm">
-        <img src="/static/cards/8h.svg" alt="8♥" class="card-svg-sm">
-        <img src="/static/cards/8c.svg" alt="8♣" class="card-svg-sm">
-        <img src="/static/cards/Kd.svg" alt="K♦" class="card-svg-sm">
-        <img src="/static/cards/3s.svg" alt="3♠" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">Two Pair</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/As.svg" alt="A♠" class="card-svg-sm">
-        <img src="/static/cards/Ah.svg" alt="A♥" class="card-svg-sm">
-        <img src="/static/cards/7c.svg" alt="7♣" class="card-svg-sm">
-        <img src="/static/cards/7d.svg" alt="7♦" class="card-svg-sm">
-        <img src="/static/cards/2s.svg" alt="2♠" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">One Pair</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
-        <img src="/static/cards/Js.svg" alt="J♠" class="card-svg-sm">
-        <img src="/static/cards/9c.svg" alt="9♣" class="card-svg-sm">
-        <img src="/static/cards/5d.svg" alt="5♦" class="card-svg-sm">
-        <img src="/static/cards/2s.svg" alt="2♠" class="card-svg-sm">
-      </div>
-    </li>
-    <li>
-      <span class="hand-name">High Card</span>
-      <div class="hand-cards-sm">
-        <img src="/static/cards/As.svg" alt="A♠" class="card-svg-sm">
-        <img src="/static/cards/Jh.svg" alt="J♥" class="card-svg-sm">
-        <img src="/static/cards/9c.svg" alt="9♣" class="card-svg-sm">
-        <img src="/static/cards/6d.svg" alt="6♦" class="card-svg-sm">
-        <img src="/static/cards/2h.svg" alt="2♥" class="card-svg-sm">
-      </div>
-    </li>
-  </ol>
-</section>
 {% endblock content %}
+
+{% block body_scripts %}
+<script>
+(function() {
+  var audioCtx = null;
+  var lastLevel = null;
+
+  document.addEventListener('click', function() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }, { once: true });
+  document.addEventListener('touchstart', function() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }, { once: true });
+
+  function playChime() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var t = audioCtx.currentTime;
+    var beat = 0.5;
+    // Cmaj7: C4, E4, G4, B4 — four quarter notes
+    var notes = [261.63, 329.63, 392.00, 493.88];
+    notes.forEach(function(freq, i) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.35, t + i * beat);
+      gain.gain.setValueAtTime(0.35, t + i * beat + beat * 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * beat + beat * 0.95);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t + i * beat);
+      osc.stop(t + i * beat + beat);
+    });
+  }
+
+  document.body.addEventListener('htmx:sseMessage', function() {
+    var el = document.querySelector('.timer-block[data-level]');
+    if (!el) return;
+    var level = el.getAttribute('data-level');
+    var status = el.getAttribute('data-status');
+    if (status !== 'running' && status !== 'paused') { lastLevel = null; return; }
+    if (lastLevel !== null && level !== lastLevel) {
+      playChime();
+    }
+    lastLevel = level;
+  });
+})();
+</script>
+{% endblock body_scripts %}

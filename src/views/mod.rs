@@ -10,6 +10,7 @@ pub struct TimerView {
     pub time_display: String,
     pub level_num: i64,
     pub total_levels: usize,
+    pub players_left: i64,
 }
 
 #[derive(Serialize)]
@@ -101,6 +102,7 @@ pub fn build_timer_view(
         time_display,
         level_num: game.current_level + 1,
         total_levels: levels.len(),
+        players_left: game.players_left,
     }
 }
 

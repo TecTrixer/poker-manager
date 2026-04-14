@@ -12,4 +12,5 @@ pub struct AppState {
     pub db: sqlx::SqlitePool,
     pub tera: Tera,
     pub sse_senders: RwLock<Vec<tokio::sync::mpsc::Sender<sse::Event>>>,
+    pub admin_password: String,
 }

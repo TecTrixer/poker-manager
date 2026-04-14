@@ -1,26 +1,55 @@
 {% if has_game %}
 {% set s = timer.status %}
-<section class="timer-block{% if s == 'paused' %} paused{% endif %}">
-  <div class="blinds-current">
-    {% if s == "pending" %}
-    <span class="status-label">Waiting to start</span>
-    {% elif s == "ended" %}
-    <span class="status-label">Game over</span>
-    {% elif timer.current_level %}
-    {% if timer.current_level.is_break %}
-    <span class="break-label">BREAK</span>
+<section class="timer-block{% if s == 'paused' %} paused{% endif %}" data-level="{{ timer.level_num }}" data-status="{{ s }}">
+
+  {% if s == "pending" %}
+  <span class="status-label">Waiting to start</span>
+
+  {% elif s == "ended" %}
+  <span class="status-label">Game over</span>
+
+  {% elif timer.current_level %}
+  <div class="players-left">Current Players: {{ timer.players_left }}</div>
+  <div class="arc-wrapper">
+    {# SVG semicircle: r=46% of viewBox width, arc hugs the outer edge #}
+    {% set total = timer.current_level.duration_secs %}
+    {% set remain = timer.seconds_remaining %}
+    {% if total > 0 %}
+      {% set fraction = remain / total %}
     {% else %}
-    <span class="blind-value">{{ timer.current_level.small_blind }}</span>
-    <span class="separator">/</span>
-    <span class="blind-value">{{ timer.current_level.big_blind }}</span>
+      {% set fraction = 0.0 %}
     {% endif %}
-    <div class="timer-countdown{% if s == 'paused' %} paused{% endif %}">
-      {{ timer.time_display }}
+    {% set arc_len = 565.5 %}
+    {% set dash = fraction * arc_len %}
+    <svg class="arc-svg" viewBox="0 0 400 215" aria-hidden="true">
+      <path class="arc-track"
+            d="M 20 200 A 180 180 0 0 1 380 200"
+            fill="none" stroke-width="6" stroke-linecap="round" />
+      <path class="arc-fill{% if s == 'paused' %} arc-paused{% endif %}{% if timer.current_level.is_break %} arc-break{% endif %}"
+            d="M 20 200 A 180 180 0 0 1 380 200"
+            fill="none" stroke-width="6" stroke-linecap="round"
+            stroke-dasharray="{{ arc_len }}"
+            stroke-dashoffset="{{ arc_len - dash }}" />
+    </svg>
+    <div class="arc-content">
+      <div class="blinds-current">
+        {% if timer.current_level.is_break %}
+        <span class="break-label">BREAK</span>
+        {% else %}
+        <span class="blind-value">{{ timer.current_level.small_blind }}</span>
+        <span class="separator">/</span>
+        <span class="blind-value">{{ timer.current_level.big_blind }}</span>
+        {% endif %}
+      </div>
+      <div class="timer-countdown{% if s == 'paused' %} paused{% endif %}">
+        {{ timer.time_display }}
+      </div>
     </div>
-    {% else %}
-    <span class="status-label">No blind phases configured</span>
-    {% endif %}
   </div>
+
+  {% else %}
+  <span class="status-label">No blind phases configured</span>
+  {% endif %}
 
   {% if timer.next_level %}
   <div class="blinds-next">

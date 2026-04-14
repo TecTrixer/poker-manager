@@ -24,10 +24,14 @@ async fn main() -> std::io::Result<()> {
 
     let tera = Tera::new("templates/**/*.html").expect("Failed to load templates");
 
+    let admin_password =
+        std::env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "admin".to_string());
+
     let state_data = web::Data::new(AppState {
         db,
         tera,
         sse_senders: tokio::sync::RwLock::new(Vec::new()),
+        admin_password,
     });
 
     let state_for_loop = state_data.clone();

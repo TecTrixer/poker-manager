@@ -14,6 +14,7 @@ pub struct Game {
     pub selected: i64,
     pub name: String,
     pub speed_steps: i64,
+    pub players_left: i64,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow, serde::Serialize)]
@@ -56,7 +57,7 @@ impl Game {
 pub async fn get_active_game(pool: &SqlitePool) -> sqlx::Result<Option<Game>> {
     sqlx::query_as::<_, Game>(
         "SELECT id, status, num_tables, num_players, current_level,
-                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps, players_left
          FROM games WHERE selected = 1 AND status != 'ended' LIMIT 1",
     )
     .fetch_optional(pool)
@@ -66,7 +67,7 @@ pub async fn get_active_game(pool: &SqlitePool) -> sqlx::Result<Option<Game>> {
 pub async fn get_game_by_id(pool: &SqlitePool, id: i64) -> sqlx::Result<Option<Game>> {
     sqlx::query_as::<_, Game>(
         "SELECT id, status, num_tables, num_players, current_level,
-                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps, players_left
          FROM games WHERE id = ?",
     )
     .bind(id)
@@ -77,7 +78,7 @@ pub async fn get_game_by_id(pool: &SqlitePool, id: i64) -> sqlx::Result<Option<G
 pub async fn get_all_games(pool: &SqlitePool) -> sqlx::Result<Vec<Game>> {
     sqlx::query_as::<_, Game>(
         "SELECT id, status, num_tables, num_players, current_level,
-                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps
+                level_started_at, paused_at, paused_duration_secs, selected, name, speed_steps, players_left
          FROM games ORDER BY id DESC",
     )
     .fetch_all(pool)
@@ -114,9 +115,10 @@ pub async fn create_game(
         .execute(pool)
         .await?;
     let row = sqlx::query(
-        "INSERT INTO games (status, num_tables, num_players, selected, name) VALUES ('pending', ?, ?, 1, '') RETURNING id",
+        "INSERT INTO games (status, num_tables, num_players, players_left, selected, name) VALUES ('pending', ?, ?, ?, 1, '') RETURNING id",
     )
     .bind(num_tables)
+    .bind(num_players)
     .bind(num_players)
     .fetch_one(pool)
     .await?;
@@ -332,5 +334,14 @@ pub async fn reset_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
     .bind(game_id)
     .execute(pool)
     .await?;
+    Ok(())
+}
+
+pub async fn set_players_left(pool: &SqlitePool, game_id: i64, count: i64) -> sqlx::Result<()> {
+    sqlx::query("UPDATE games SET players_left = MAX(?, 1) WHERE id = ?")
+        .bind(count)
+        .bind(game_id)
+        .execute(pool)
+        .await?;
     Ok(())
 }

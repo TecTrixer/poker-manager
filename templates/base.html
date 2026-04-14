@@ -7,8 +7,9 @@
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js"></script>
   <script src="/static/sse.js"></script>
+
 </head>
-<body>
+<body{% block body_class %}{% endblock body_class %}>
   <header>
     <nav>
       <a href="/">Timer</a>
@@ -18,5 +19,6 @@
   <main>
     {% block content %}{% endblock content %}
   </main>
+  {% block body_scripts %}{% endblock body_scripts %}
 </body>
 </html>

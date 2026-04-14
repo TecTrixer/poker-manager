@@ -56,6 +56,19 @@ main {
   padding: 1.5rem;
 }
 
+body.page-timer {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.page-timer main {
+  max-width: none;
+  height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem;
+}
+
 h1 { font-size: 1.5rem; margin-bottom: 1rem; }
 h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 
@@ -63,8 +76,54 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 
 .timer-block {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
+
+/* ── Semicircle progress arc ───────────────────────────────────────────── */
+
+.arc-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: min(90vh, 100%);
+  margin: 0 auto;
+}
+
+.arc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.arc-track {
+  stroke: var(--border);
+}
+
+.arc-fill {
+  stroke: var(--accent);
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+.arc-fill.arc-paused { stroke: var(--paused); }
+.arc-fill.arc-break  { stroke: var(--break); }
+
+.arc-content {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 18%;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Blinds & countdown ────────────────────────────────────────────────── */
 
 .blinds-current {
   display: flex;
@@ -72,37 +131,47 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
   align-items: baseline;
   justify-content: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .blind-value {
-  font-size: 4rem;
+  font-size: clamp(3rem, 10vw, 8rem);
   font-weight: 700;
   line-height: 1;
 }
 
 .separator {
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 6vw, 5rem);
   color: var(--text-muted);
 }
 
 .timer-countdown {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 9vw, 7rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  width: 100%;
   text-align: center;
+  margin-top: 0.25rem;
 }
 
 .timer-countdown.paused { color: var(--paused); }
 
 .break-label {
-  font-size: 3rem;
+  font-size: clamp(2.5rem, 9vw, 7rem);
   font-weight: 700;
   color: var(--break);
 }
 
-.status-label { color: var(--text-muted); }
+.status-label {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+
+.players-left {
+  text-align: center;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
 .text-muted { color: var(--text-muted); font-size: 0.85rem; }
 
 .level-indicator {
@@ -113,9 +182,9 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 }
 
 .blinds-next {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: clamp(1rem, 2.5vw, 1.6rem);
 }
 
 .next-label { margin-right: 0.25rem; }
@@ -337,23 +406,60 @@ button:hover { border-color: var(--accent); }
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.timer-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+#timer-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 @media (min-width: 640px) {
   .main-layout {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 2rem;
   }
 
-  .timer-col {
-    flex: 1;
-    min-width: 0;
+  .chip-col {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 220px;
+    width: clamp(220px, 20vw, 320px);
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+    margin-right: 6vw;
   }
 
-  .chip-col {
-    width: 220px;
-    flex-shrink: 0;
+  .chip-col h2 {
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  }
+
+  .chip-col .chip-dot {
+    width: clamp(12px, 1.2vw, 18px);
+    height: clamp(12px, 1.2vw, 18px);
+  }
+
+  .chip-col th,
+  .chip-col td {
+    padding: 0.6rem 0.75rem;
+    font-size: inherit;
+  }
+
+  .chip-col th {
+    font-size: clamp(0.85rem, 1.2vw, 1.1rem);
   }
 }
 

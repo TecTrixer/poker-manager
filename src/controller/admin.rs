@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpRequest, HttpResponse};
+use actix_web::{cookie::Cookie, get, post, web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use tera::Context;
 
@@ -6,8 +6,8 @@ use crate::{
     models::{
         adjust_speed, create_game, delete_blind_levels, delete_chip_types, delete_game,
         get_active_game, get_all_games, get_blind_levels, get_chip_types, insert_blind_level,
-        insert_chip_type, pause_game, reset_game, reset_speed, resume_game, select_game, set_level,
-        start_game, update_game_players,
+        insert_chip_type, pause_game, reset_game, reset_speed, resume_game, select_game,
+        set_level, set_players_left, start_game, update_game_players,
     },
     views::{build_timer_view, level_label, LevelAdminView},
     AppState,
@@ -34,10 +34,49 @@ fn render(state: &AppState, template: &str, ctx: &Context) -> HttpResponse {
     }
 }
 
+fn is_logged_in(req: &HttpRequest, state: &AppState) -> bool {
+    req.cookie("admin_token")
+        .map(|c| c.value() == state.admin_password)
+        .unwrap_or(false)
+}
+
+#[get("/admin/login")]
+pub async fn admin_login_page(state: web::Data<AppState>) -> HttpResponse {
+    let ctx = Context::new();
+    render(&state, "pages/admin/login.html", &ctx)
+}
+
+#[derive(Deserialize)]
+pub struct LoginForm {
+    pub password: String,
+}
+
+#[post("/admin/login")]
+pub async fn admin_login_post(
+    state: web::Data<AppState>,
+    form: web::Form<LoginForm>,
+) -> HttpResponse {
+    if form.password == state.admin_password {
+        let cookie = Cookie::build("admin_token", state.admin_password.clone())
+            .path("/admin")
+            .http_only(true)
+            .finish();
+        HttpResponse::SeeOther()
+            .cookie(cookie)
+            .insert_header(("Location", "/admin"))
+            .finish()
+    } else {
+        let mut ctx = Context::new();
+        ctx.insert("error", "Wrong password");
+        render(&state, "pages/admin/login.html", &ctx)
+    }
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 #[get("/admin")]
 pub async fn setup_get(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    if !is_logged_in(&req, &state) { return redirect("/admin/login"); }
     let ip = peer_ip(&req);
     tracing::info!(ip = %ip, "GET /admin setup page");
     let game = get_active_game(&state.db).await.unwrap_or(None);
@@ -197,7 +236,8 @@ pub async fn setup_post(
 // ── Game control ──────────────────────────────────────────────────────────────
 
 #[get("/admin/game")]
-pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
+pub async fn game_get(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    if !is_logged_in(&req, &state) { return redirect("/admin/login"); }
     let game = match get_active_game(&state.db).await {
         Ok(Some(g)) => g,
         Ok(None) => return redirect("/admin"),
@@ -270,6 +310,7 @@ pub async fn game_get(state: web::Data<AppState>) -> HttpResponse {
     ctx.insert("timer", &timer);
     ctx.insert("has_game", &true);
     ctx.insert("speed_steps", &speed_steps);
+    ctx.insert("players_left", &game.players_left);
 
     render(&state, "pages/admin/game.html", &ctx)
 }
@@ -361,6 +402,25 @@ pub async fn game_decelerate(state: web::Data<AppState>, req: HttpRequest) -> Ht
     redirect("/admin/game")
 }
 
+#[derive(Deserialize)]
+pub struct PlayersForm {
+    pub count: i64,
+}
+
+#[post("/admin/game/players")]
+pub async fn game_set_players(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    form: web::Form<PlayersForm>,
+) -> HttpResponse {
+    let ip = peer_ip(&req);
+    if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, players_left = form.count, "POST /admin/game/players");
+        let _ = set_players_left(&state.db, game.id, form.count).await;
+    }
+    redirect("/admin/game")
+}
+
 // ── Suggest schedule ──────────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
@@ -444,6 +504,7 @@ pub async fn blind_row_component(
 
 #[get("/admin/games")]
 pub async fn games_list(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
+    if !is_logged_in(&req, &state) { return redirect("/admin/login"); }
     let ip = peer_ip(&req);
     tracing::info!(ip = %ip, "GET /admin/games");
     let games = get_all_games(&state.db).await.unwrap_or_default();
