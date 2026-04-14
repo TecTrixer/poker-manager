@@ -53,8 +53,8 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     var t = audioCtx.currentTime;
     var beat = 0.5;
-    // Cmaj7: C4, E4, G4, B4 — four quarter notes
-    var notes = [261.63, 329.63, 392.00, 493.88];
+    // C: C4, E4, G4, C5 — four quarter notes
+    var notes = [261.63, 329.63, 392.00, 523.25];
     notes.forEach(function(freq, i) {
       var osc = audioCtx.createOscillator();
       var gain = audioCtx.createGain();
