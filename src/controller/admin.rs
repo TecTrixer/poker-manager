@@ -13,28 +13,6 @@ use crate::{
     AppState,
 };
 
-fn peer_ip(req: &HttpRequest) -> String {
-    if let Some(val) = req.headers().get("x-forwarded-for") {
-        if let Ok(s) = val.to_str() {
-            if let Some(first) = s.split(',').next() {
-                let ip = first.trim();
-                if !ip.is_empty() {
-                    return ip.to_string();
-                }
-            }
-        }
-    }
-    if let Some(val) = req.headers().get("x-real-ip") {
-        if let Ok(s) = val.to_str() {
-            let ip = s.trim();
-            if !ip.is_empty() {
-                return ip.to_string();
-            }
-        }
-    }
-    let info = req.connection_info();
-    info.peer_addr().unwrap_or("unknown").to_string()
-}
 
 fn redirect(path: &str) -> HttpResponse {
     HttpResponse::SeeOther()
@@ -95,7 +73,7 @@ pub async fn admin_login_post(
 #[get("/admin")]
 pub async fn setup_get(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
     if !is_logged_in(&req, &state) { return redirect("/admin/login"); }
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     tracing::info!(ip = %ip, "GET /admin setup page");
     let game = get_active_game(&state.db).await.unwrap_or(None);
 
@@ -163,7 +141,7 @@ pub async fn setup_post(
     req: HttpRequest,
     body: web::Bytes,
 ) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     let qs_config = serde_qs::Config::new(5, false);
     let form: SetupForm = match qs_config.deserialize_bytes(&body) {
         Ok(f) => f,
@@ -337,7 +315,7 @@ pub async fn game_get(state: web::Data<AppState>, req: HttpRequest) -> HttpRespo
 
 #[post("/admin/game/start")]
 pub async fn game_start(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/start");
         let _ = start_game(&state.db, game.id).await;
@@ -347,7 +325,7 @@ pub async fn game_start(state: web::Data<AppState>, req: HttpRequest) -> HttpRes
 
 #[post("/admin/game/pause")]
 pub async fn game_pause(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/pause");
         let _ = pause_game(&state.db, game.id).await;
@@ -357,7 +335,7 @@ pub async fn game_pause(state: web::Data<AppState>, req: HttpRequest) -> HttpRes
 
 #[post("/admin/game/resume")]
 pub async fn game_resume(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/resume");
         let _ = resume_game(&state.db, game.id).await;
@@ -367,7 +345,7 @@ pub async fn game_resume(state: web::Data<AppState>, req: HttpRequest) -> HttpRe
 
 #[post("/admin/game/next")]
 pub async fn game_next_level(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         let levels = get_blind_levels(&state.db, game.id).await.unwrap_or_default();
         let next = game.current_level + 1;
@@ -381,7 +359,7 @@ pub async fn game_next_level(state: web::Data<AppState>, req: HttpRequest) -> Ht
 
 #[post("/admin/game/prev")]
 pub async fn game_prev_level(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         let prev = (game.current_level - 1).max(0);
         tracing::info!(ip = %ip, game_id = game.id, from_level = game.current_level, to_level = prev, "POST /admin/game/prev");
@@ -392,7 +370,7 @@ pub async fn game_prev_level(state: web::Data<AppState>, req: HttpRequest) -> Ht
 
 #[post("/admin/game/reset")]
 pub async fn game_reset(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, "POST /admin/game/reset");
         let _ = reset_game(&state.db, game.id).await;
@@ -402,7 +380,7 @@ pub async fn game_reset(state: web::Data<AppState>, req: HttpRequest) -> HttpRes
 
 #[post("/admin/game/accelerate")]
 pub async fn game_accelerate(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, old_speed_steps = game.speed_steps, "POST /admin/game/accelerate");
         let _ = adjust_speed(&state.db, game.id, 1).await;
@@ -412,7 +390,7 @@ pub async fn game_accelerate(state: web::Data<AppState>, req: HttpRequest) -> Ht
 
 #[post("/admin/game/decelerate")]
 pub async fn game_decelerate(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, old_speed_steps = game.speed_steps, "POST /admin/game/decelerate");
         let _ = adjust_speed(&state.db, game.id, -1).await;
@@ -431,7 +409,7 @@ pub async fn game_set_players(
     req: HttpRequest,
     form: web::Form<PlayersForm>,
 ) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, players_left = form.count, "POST /admin/game/players");
         let _ = set_players_left(&state.db, game.id, form.count).await;
@@ -459,7 +437,7 @@ pub async fn suggest_schedule_handler(
     req: HttpRequest,
     body: web::Bytes,
 ) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     let qs_config = serde_qs::Config::new(5, false);
     let form: SuggestScheduleForm = match qs_config.deserialize_bytes(&body) {
         Ok(f) => f,
@@ -523,7 +501,7 @@ pub async fn blind_row_component(
 #[get("/admin/games")]
 pub async fn games_list(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
     if !is_logged_in(&req, &state) { return redirect("/admin/login"); }
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     tracing::info!(ip = %ip, "GET /admin/games");
     let games = get_all_games(&state.db).await.unwrap_or_default();
     let active = get_active_game(&state.db).await.unwrap_or(None);
@@ -535,7 +513,7 @@ pub async fn games_list(state: web::Data<AppState>, req: HttpRequest) -> HttpRes
 
 #[post("/admin/games/new")]
 pub async fn games_new(state: web::Data<AppState>, req: HttpRequest) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     tracing::info!(ip = %ip, "POST /admin/games/new — creating new game");
     match create_game(&state.db, 1, 8).await {
         Ok(id) => {
@@ -559,7 +537,7 @@ pub async fn games_select(
     req: HttpRequest,
     path: web::Path<GameIdPath>,
 ) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     let game_id = path.id;
     tracing::info!(ip = %ip, game_id = game_id, "POST /admin/games/select");
     if let Err(e) = select_game(&state.db, game_id).await {
@@ -574,7 +552,7 @@ pub async fn games_delete(
     req: HttpRequest,
     path: web::Path<GameIdPath>,
 ) -> HttpResponse {
-    let ip = peer_ip(&req);
+    let ip = super::peer_ip(&req);
     let game_id = path.id;
     tracing::info!(ip = %ip, game_id = game_id, "POST /admin/games/delete");
     if let Err(e) = delete_game(&state.db, game_id).await {

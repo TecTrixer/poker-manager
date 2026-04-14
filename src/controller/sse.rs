@@ -10,11 +10,7 @@ use crate::{
 
 #[get("/sse/timer")]
 pub async fn sse_timer(state: web::Data<AppState>, req: HttpRequest) -> impl Responder {
-    let peer = req
-        .connection_info()
-        .peer_addr()
-        .unwrap_or("unknown")
-        .to_string();
+    let peer = super::peer_ip(&req);
     let (tx, rx) = tokio::sync::mpsc::channel(8);
     let client_count = {
         let mut senders = state.sse_senders.write().await;

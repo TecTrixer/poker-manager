@@ -2,7 +2,30 @@ pub mod admin;
 pub mod player;
 pub mod sse;
 
-use actix_web::{get, web, HttpResponse};
+use actix_web::{get, web, HttpRequest, HttpResponse};
+
+pub(super) fn peer_ip(req: &HttpRequest) -> String {
+    if let Some(val) = req.headers().get("x-forwarded-for") {
+        if let Ok(s) = val.to_str() {
+            if let Some(first) = s.split(',').next() {
+                let ip = first.trim();
+                if !ip.is_empty() {
+                    return ip.to_string();
+                }
+            }
+        }
+    }
+    if let Some(val) = req.headers().get("x-real-ip") {
+        if let Ok(s) = val.to_str() {
+            let ip = s.trim();
+            if !ip.is_empty() {
+                return ip.to_string();
+            }
+        }
+    }
+    let info = req.connection_info();
+    info.peer_addr().unwrap_or("unknown").to_string()
+}
 
 #[get("/health")]
 async fn health() -> HttpResponse {
