@@ -38,6 +38,7 @@ body {
 
 header nav {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
   padding: 0.75rem 1.5rem;
   border-bottom: 1px solid var(--border);
@@ -46,6 +47,26 @@ header nav {
 header nav a {
   color: var(--text-muted);
   text-decoration: none;
+}
+
+.sponsor-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.75rem 0;
+  flex-shrink: 0;
+}
+
+.sponsor-logo {
+  height: clamp(40px, 8vw, 70px);
+  width: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-invert {
+    filter: invert(1);
+  }
 }
 
 header nav a:hover { color: var(--text); }
@@ -136,14 +157,15 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 
 .arc-content {
   position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 26%;
+  left: 8%;
+  right: 8%;
+  top: 15%;
   bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  container-type: inline-size;
 }
 
 /* ── Blinds & countdown ────────────────────────────────────────────────── */
@@ -155,21 +177,22 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
   justify-content: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
+  max-width: 90%;
 }
 
 .blind-value {
-  font-size: clamp(3rem, 10vw, 8rem);
+  font-size: clamp(2rem, 18cqi, 7rem);
   font-weight: 700;
   line-height: 1;
 }
 
 .separator {
-  font-size: clamp(1.8rem, 6vw, 5rem);
+  font-size: clamp(1.2rem, 10cqi, 4rem);
   color: var(--text-muted);
 }
 
 .timer-countdown {
-  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-size: clamp(2rem, 16cqi, 6rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -179,7 +202,7 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 .timer-countdown.paused { color: var(--paused); }
 
 .break-label {
-  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-size: clamp(2rem, 16cqi, 6rem);
   font-weight: 700;
   color: var(--break);
 }

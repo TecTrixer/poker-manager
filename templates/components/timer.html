@@ -19,14 +19,14 @@
     {% else %}
       {% set fraction = 0.0 %}
     {% endif %}
-    {% set arc_len = 565.5 %}
+    {% set arc_len = 722.6 %}
     {% set dash = fraction * arc_len %}
-    <svg class="arc-svg" viewBox="0 0 400 215" aria-hidden="true">
+    <svg class="arc-svg" viewBox="0 0 500 270" aria-hidden="true">
       <path class="arc-track"
-            d="M 20 200 A 180 180 0 0 1 380 200"
+            d="M 20 255 A 230 230 0 0 1 480 255"
             fill="none" stroke-width="6" stroke-linecap="round" />
       <path class="arc-fill{% if s == 'paused' %} arc-paused{% endif %}{% if timer.current_level.is_break %} arc-break{% endif %}"
-            d="M 20 200 A 180 180 0 0 1 380 200"
+            d="M 20 255 A 230 230 0 0 1 480 255"
             fill="none" stroke-width="6" stroke-linecap="round"
             stroke-dasharray="{{ arc_len }}"
             stroke-dashoffset="{{ arc_len - dash }}" />
