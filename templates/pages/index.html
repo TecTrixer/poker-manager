@@ -4,10 +4,6 @@
 {% block body_class %} class="page-timer"{% endblock body_class %}
 
 {% block content %}
-<div class="sponsor-logos">
-  <img src="/static/logo_stacked_black.png" alt="Jane Street" class="sponsor-logo logo-invert">
-  <img src="/static/vis_logo_inverse.png" alt="VIS" class="sponsor-logo">
-</div>
 <div class="main-layout">
   <div class="timer-col" hx-ext="sse" sse-connect="/sse/timer">
     <div id="timer-display" sse-swap="timer">
