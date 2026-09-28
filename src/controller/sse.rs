@@ -85,13 +85,9 @@ async fn advance_if_needed(state: &AppState) {
 async fn render_timer_fragment(state: &AppState) -> Result<String, Box<dyn std::error::Error>> {
     let game = get_active_game(&state.db).await?;
 
-    let levels = match &game {
-        Some(g) => get_blind_levels(&state.db, g.id).await.unwrap_or_default(),
-        None => vec![],
-    };
-
     let mut ctx = tera::Context::new();
     if let Some(ref g) = game {
+        let levels = get_blind_levels(&state.db, g.id).await.unwrap_or_default();
         let timer = build_timer_view(g, &levels);
         ctx.insert("timer", &timer);
         ctx.insert("has_game", &true);

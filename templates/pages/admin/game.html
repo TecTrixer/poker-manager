@@ -70,6 +70,18 @@
                style="width:4rem" onchange="this.form.submit()">
       </label>
     </form>
+    <form method="POST" action="/admin/game/players/adjust">
+      <input type="hidden" name="delta" value="-1">
+      <button type="submit" class="btn-primary" {% if players_left <= 1 %}disabled{% endif %}>&minus;1 player</button>
+    </form>
+    <form method="POST" action="/admin/game/players/adjust">
+      <input type="hidden" name="delta" value="-2">
+      <button type="submit" {% if players_left <= 2 %}disabled{% endif %}>&minus;2</button>
+    </form>
+    <form method="POST" action="/admin/game/players/adjust">
+      <input type="hidden" name="delta" value="1">
+      <button type="submit" title="Undo a removal" {% if players_left >= num_players %}disabled{% endif %}>+1</button>
+    </form>
   </section>
 
   <section class="schedule">

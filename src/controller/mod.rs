@@ -51,6 +51,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
         .service(admin::game_accelerate)
         .service(admin::game_decelerate)
         .service(admin::game_set_players)
+        .service(admin::game_adjust_players)
         .service(admin::blind_row_component)
         .service(admin::suggest_schedule_handler)
         .service(admin::games_list)

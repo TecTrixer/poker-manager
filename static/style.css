@@ -36,20 +36,6 @@ body {
   line-height: 1.5;
 }
 
-header nav {
-  display: flex;
-  gap: 1.5rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-header nav a {
-  color: var(--text-muted);
-  text-decoration: none;
-}
-
-header nav a:hover { color: var(--text); }
-
 main {
   max-width: 960px;
   margin: 0 auto;
@@ -85,7 +71,7 @@ main {
 
   body.page-timer main {
     max-width: none;
-    height: calc(100vh - 3rem);
+    height: 100vh;
     display: flex;
     flex-direction: column;
     padding: 1rem 2rem;
@@ -144,32 +130,36 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  container-type: inline-size;
 }
 
 /* ── Blinds & countdown ────────────────────────────────────────────────── */
 
+/* Sized against the arc width (cqi). --chars is the total digit count of both
+   blinds; bold digits are ~0.68em wide, so long values shrink to stay inside
+   the ring while short values keep the 24cqi maximum. */
 .blinds-current {
   display: flex;
   flex-direction: row;
   align-items: baseline;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.15em;
   flex-wrap: nowrap;
+  font-size: min(24cqi, 80cqi / (var(--chars, 4) * 0.68 + 0.4));
 }
 
 .blind-value {
-  font-size: clamp(3rem, 10vw, 8rem);
   font-weight: 700;
   line-height: 1;
 }
 
 .separator {
-  font-size: clamp(1.8rem, 6vw, 5rem);
+  font-size: 0.6em;
   color: var(--text-muted);
 }
 
 .timer-countdown {
-  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-size: 20cqi;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -179,7 +169,7 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 .timer-countdown.paused { color: var(--paused); }
 
 .break-label {
-  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-size: 20cqi;
   font-weight: 700;
   color: var(--break);
 }
@@ -189,11 +179,19 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
   font-size: 1.2rem;
 }
 
-.players-left {
-  text-align: center;
+.table-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 2em;
   font-size: clamp(1rem, 2.5vw, 1.5rem);
   color: var(--text-muted);
   margin-bottom: 0.5rem;
+}
+
+.table-stats strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 .text-muted { color: var(--text-muted); font-size: 0.85rem; }
 
@@ -212,6 +210,26 @@ h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
 
 .next-label { margin-right: 0.25rem; }
 .next-duration { margin-left: 0.25rem; }
+
+/* ── Sponsor logo ───────────────────────────────────────────────────────── */
+
+.sponsor {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.sponsor-logo {
+  height: clamp(32px, 7vh, 72px);
+  width: auto;
+  max-width: 80%;
+  opacity: 0.85;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sponsor-logo { filter: invert(1); }
+}
 
 /* ── Chips ──────────────────────────────────────────────────────────────── */
 
@@ -337,6 +355,11 @@ button, .btn {
 }
 
 button:hover { border-color: var(--accent); }
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .btn-primary {
   background: var(--accent);

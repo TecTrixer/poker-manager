@@ -22,7 +22,13 @@ async fn make_app_state() -> web::Data<AppState> {
         db: pool,
         tera,
         sse_senders: tokio::sync::RwLock::new(Vec::new()),
+        admin_password: "admin".to_string(),
     })
+}
+
+/// GET request carrying the admin login cookie, so admin pages render instead of redirecting.
+fn admin_get() -> test::TestRequest {
+    test::TestRequest::get().cookie(actix_web::cookie::Cookie::new("admin_token", "admin"))
 }
 
 /// Create a game via POST /admin/setup and return the body (redirects to /admin/game).
@@ -75,7 +81,7 @@ async fn assert_get_200(
     uri: &str,
     needle: &str,
 ) {
-    let req = test::TestRequest::get().uri(uri).to_request();
+    let req = admin_get().uri(uri).to_request();
     let resp: actix_web::dev::ServiceResponse = test::call_service(app, req).await;
     let status = resp.status().as_u16();
     let body = test::read_body(resp).await;
@@ -163,6 +169,35 @@ async fn test_rules_page_with_game() {
     assert_get_200(&app, "/rules", "Royal Flush").await;
 }
 
+#[actix_web::test]
+async fn test_adjust_players() {
+    let state = make_app_state().await;
+    let app = test::init_service(
+        App::new().app_data(state).configure(controller::routes),
+    )
+    .await;
+    post_setup(&app, "").await;
+    assert_post_redirects(&app, "/admin/game/start", "/admin/game").await;
+
+    let adjust = |delta: i64| {
+        test::TestRequest::post()
+            .uri("/admin/game/players/adjust")
+            .insert_header(("Content-Type", "application/x-www-form-urlencoded"))
+            .set_payload(format!("delta={delta}"))
+            .to_request()
+    };
+
+    let resp = test::call_service(&app, adjust(-1)).await;
+    assert_eq!(resp.status().as_u16(), 303);
+    assert_get_200(&app, "/", "Players <strong>3</strong>").await;
+
+    // Clamped to [1, num_players]
+    test::call_service(&app, adjust(10)).await;
+    assert_get_200(&app, "/", "Players <strong>4</strong>").await;
+    test::call_service(&app, adjust(-10)).await;
+    assert_get_200(&app, "/", "Players <strong>1</strong>").await;
+}
+
 // ── Admin setup ───────────────────────────────────────────────────────────────
 
 #[actix_web::test]
@@ -224,7 +259,7 @@ async fn test_admin_setup_reconfigure_running_game() {
     assert_post_redirects(&app, "/admin/game/start", "/admin/game").await;
 
     // Get the game id from /admin/game page
-    let req = test::TestRequest::get().uri("/admin/game").to_request();
+    let req = admin_get().uri("/admin/game").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 200);
     let body = test::read_body(resp).await;
@@ -257,7 +292,7 @@ async fn test_admin_game_get_redirects_without_game() {
         App::new().app_data(state).configure(controller::routes),
     )
     .await;
-    let req = test::TestRequest::get().uri("/admin/game").to_request();
+    let req = admin_get().uri("/admin/game").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 303);
     assert_eq!(
@@ -365,7 +400,7 @@ async fn test_admin_accelerate_decelerate() {
 
     // Decelerate back to 0: indicator should vanish
     assert_post_redirects(&app, "/admin/game/decelerate", "/admin/game").await;
-    let req = test::TestRequest::get().uri("/admin/game").to_request();
+    let req = admin_get().uri("/admin/game").to_request();
     let resp = test::call_service(&app, req).await;
     let body = test::read_body(resp).await;
     let body_str = std::str::from_utf8(&body).unwrap();
@@ -485,7 +520,7 @@ async fn test_blind_row_component_oob_hidden() {
         App::new().app_data(state).configure(controller::routes),
     )
     .await;
-    let req = test::TestRequest::get()
+    let req = admin_get()
         .uri("/admin/components/blind-row?index=5")
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -565,7 +600,7 @@ async fn test_sse_timer_returns_event_stream() {
         App::new().app_data(state).configure(controller::routes),
     )
     .await;
-    let req = test::TestRequest::get().uri("/sse/timer").to_request();
+    let req = admin_get().uri("/sse/timer").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 200);
     let content_type = resp

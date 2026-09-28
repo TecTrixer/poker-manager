@@ -9,7 +9,9 @@
   <span class="status-label">Game over</span>
 
   {% elif timer.current_level %}
-  <div class="players-left">Current Players: {{ timer.players_left }}</div>
+  <div class="table-stats">
+    <span>Players <strong>{{ timer.players_left }}</strong></span>
+  </div>
   <div class="arc-wrapper">
     {# SVG semicircle: r=46% of viewBox width, arc hugs the outer edge #}
     {% set total = timer.current_level.duration_secs %}
@@ -32,7 +34,9 @@
             stroke-dashoffset="{{ arc_len - dash }}" />
     </svg>
     <div class="arc-content">
-      <div class="blinds-current">
+      {% set sb_len = timer.current_level.small_blind | as_str | length %}
+      {% set bb_len = timer.current_level.big_blind | as_str | length %}
+      <div class="blinds-current" style="--chars: {{ sb_len + bb_len }}">
         {% if timer.current_level.is_break %}
         <span class="break-label">BREAK</span>
         {% else %}

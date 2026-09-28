@@ -337,6 +337,17 @@ pub async fn reset_game(pool: &SqlitePool, game_id: i64) -> sqlx::Result<()> {
     Ok(())
 }
 
+pub async fn adjust_players_left(pool: &SqlitePool, game_id: i64, delta: i64) -> sqlx::Result<()> {
+    sqlx::query(
+        "UPDATE games SET players_left = MAX(MIN(players_left + ?, num_players), 1) WHERE id = ?",
+    )
+    .bind(delta)
+    .bind(game_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 pub async fn set_players_left(pool: &SqlitePool, game_id: i64, count: i64) -> sqlx::Result<()> {
     sqlx::query("UPDATE games SET players_left = MAX(?, 1) WHERE id = ?")
         .bind(count)

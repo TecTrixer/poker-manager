@@ -4,7 +4,7 @@ use tera::Context;
 
 use crate::{
     models::{
-        adjust_speed, create_game, delete_blind_levels, delete_chip_types, delete_game,
+        adjust_players_left, adjust_speed, create_game, delete_blind_levels, delete_chip_types, delete_game,
         get_active_game, get_all_games, get_blind_levels, get_chip_types, insert_blind_level,
         insert_chip_type, pause_game, reset_game, reset_speed, resume_game, select_game,
         set_level, set_players_left, start_game, update_game_players,
@@ -413,6 +413,25 @@ pub async fn game_set_players(
     if let Ok(Some(game)) = get_active_game(&state.db).await {
         tracing::info!(ip = %ip, game_id = game.id, players_left = form.count, "POST /admin/game/players");
         let _ = set_players_left(&state.db, game.id, form.count).await;
+    }
+    redirect("/admin/game")
+}
+
+#[derive(Deserialize)]
+pub struct PlayersDeltaForm {
+    pub delta: i64,
+}
+
+#[post("/admin/game/players/adjust")]
+pub async fn game_adjust_players(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    form: web::Form<PlayersDeltaForm>,
+) -> HttpResponse {
+    let ip = super::peer_ip(&req);
+    if let Ok(Some(game)) = get_active_game(&state.db).await {
+        tracing::info!(ip = %ip, game_id = game.id, delta = form.delta, old_players_left = game.players_left, "POST /admin/game/players/adjust");
+        let _ = adjust_players_left(&state.db, game.id, form.delta).await;
     }
     redirect("/admin/game")
 }
